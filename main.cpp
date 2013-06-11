@@ -1,19 +1,26 @@
-#include "Tools.hpp"
-#include "Token.hpp"
+#include "State.hpp"
+#include <iostream>
 using namespace std;
 
 int main(int argc, char** argv)
 {
-    const char* input = "712 +   6.55.23423.22 = \"asdf\"";
-
-    Kelly::Token token(input);
-
-    while (token.TokenType() != Kelly::Token::None)
+    if (argc > 1)
     {
-        cout << "[" << token.Length() << "] " << token.TokenType()
-            << " -- " << token << endl;
+        char* path = argv[1];
+        Kelly::State state;
 
-        token = Kelly::Token(token.Start() + token.Length());
+        if (state.LoadFromFile(path))
+        {
+            cout << "Load successful." << endl;
+        }
+        else
+        {
+            cout << "failed to open file: " << path << endl;
+        }
+    }
+    else
+    {
+        cout << "usage: " << argv[0] << " <path>" << endl;
     }
 
     return 0;
