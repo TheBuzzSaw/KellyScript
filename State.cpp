@@ -25,11 +25,11 @@ namespace Kelly
 
             Token token(script);
 
-            while (token.TokenType() != Token::None)
+            while (token.Type() != Token::None)
             {
                 tokens.push_back(token);
 
-                std::cout << "[" << token.Length() << "] " << token.TokenType()
+                std::cout << "[" << token.Length() << "] " << token.Type()
                     << " -- " << token << std::endl;
 
                 token = Token(token.Start() + token.Length());

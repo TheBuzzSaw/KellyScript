@@ -182,7 +182,7 @@ namespace Kelly
             ;
     }
 
-    std::ostream& operator<<(std::ostream& stream, Token::Type type)
+    std::ostream& operator<<(std::ostream& stream, Token::Types type)
     {
         const char* result = "unknown";
 

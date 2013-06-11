@@ -33,11 +33,11 @@
 			<Add option="-std=c++11" />
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="AST/Expression.cpp" />
+		<Unit filename="AST/Expression.hpp" />
 		<Unit filename="Instruction.cpp" />
 		<Unit filename="Instruction.hpp" />
 		<Unit filename="Primitives.hpp" />
-		<Unit filename="Program.cpp" />
-		<Unit filename="Program.hpp" />
 		<Unit filename="State.cpp" />
 		<Unit filename="State.hpp" />
 		<Unit filename="Token.cpp" />
