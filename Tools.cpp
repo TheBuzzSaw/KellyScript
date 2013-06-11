@@ -1,0 +1,31 @@
+#include "Tools.hpp"
+#include <cstdlib>
+#include <fstream>
+
+namespace Kelly
+{
+    std::vector<char> FileToString(const char* path)
+    {
+        std::vector<char> result;
+
+        if (path && *path)
+        {
+            std::ifstream fin(path, std::ifstream::binary);
+
+            if (fin)
+            {
+                fin.seekg(0, fin.end);
+                size_t length = fin.tellg();
+                fin.seekg(0, fin.beg);
+
+                result.resize(length + 1);
+                fin.read(&result[0], length);
+                result[length] = 0;
+
+                fin.close();
+            }
+        }
+
+        return result;
+    }
+}

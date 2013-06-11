@@ -14,6 +14,7 @@ namespace Kelly
 
             Token(const char* buffer);
             Token(const Token& other);
+            Token(Token&& other);
             ~Token();
 
             Token& operator=(const Token& other);

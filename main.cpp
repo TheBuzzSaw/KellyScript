@@ -1,3 +1,4 @@
+#include "Tools.hpp"
 #include "Token.hpp"
 using namespace std;
 

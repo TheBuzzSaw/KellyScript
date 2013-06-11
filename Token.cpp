@@ -101,6 +101,14 @@ namespace Kelly
         _length = other._length;
     }
 
+    Token::Token(Token&& other)
+    {
+        // Just seeing if C++11 works.
+        _type = other._type;
+        _start = other._start;
+        _length = other._length;
+    }
+
     Token::~Token()
     {
     }

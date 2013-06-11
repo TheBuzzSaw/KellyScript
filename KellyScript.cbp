@@ -29,6 +29,7 @@
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-std=c++11" />
 			<Add option="-Wall" />
 		</Compiler>
 		<Unit filename="Instruction.cpp" />
@@ -40,6 +41,8 @@
 		<Unit filename="State.hpp" />
 		<Unit filename="Token.cpp" />
 		<Unit filename="Token.hpp" />
+		<Unit filename="Tools.cpp" />
+		<Unit filename="Tools.hpp" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />
