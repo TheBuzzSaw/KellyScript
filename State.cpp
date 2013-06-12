@@ -15,6 +15,13 @@ namespace Kelly
     State::~State()
     {
         free(_stack);
+
+        for (auto i = _identifiersByName.begin();
+            i != _identifiersByName.end(); ++i)
+        {
+            Identifier* identifier = i->second;
+            delete identifier;
+        }
     }
 
     void State::LoadFromString(const char* script)
@@ -28,10 +35,6 @@ namespace Kelly
             while (token.Type() != Token::None)
             {
                 tokens.push_back(token);
-
-                std::cout << "[" << token.Length() << "] " << token.Type()
-                    << " -- " << token << std::endl;
-
                 token = Token(token.Start() + token.Length());
             }
         }

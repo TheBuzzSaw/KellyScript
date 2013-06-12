@@ -3,6 +3,8 @@
 
 #include "Instruction.hpp"
 #include "Primitives.hpp"
+#include "AST/Identifier.hpp"
+#include <map>
 
 namespace Kelly
 {
@@ -22,6 +24,7 @@ namespace Kelly
             State(const State& other);
             State(State&& other);
 
+            std::map<std::string, Identifier*> _identifiersByName;
             Instruction* _currentInstruction;
             void* _stack;
             UInt8* _stackPointer;
