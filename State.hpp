@@ -24,6 +24,9 @@ namespace Kelly
             State(const State& other);
             State(State&& other);
 
+            void PrepareIdentifiers();
+            void Save(Identifier* identifier);
+
             std::map<std::string, Identifier*> _identifiersByName;
             Instruction* _currentInstruction;
             void* _stack;

@@ -33,8 +33,6 @@
 			<Add option="-std=c++11" />
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="AST/DataType.cpp" />
-		<Unit filename="AST/DataType.hpp" />
 		<Unit filename="AST/Expression.cpp" />
 		<Unit filename="AST/Expression.hpp" />
 		<Unit filename="AST/Identifier.cpp" />

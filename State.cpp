@@ -19,14 +19,13 @@ namespace Kelly
         for (auto i = _identifiersByName.begin();
             i != _identifiersByName.end(); ++i)
         {
-            Identifier* identifier = i->second;
-            delete identifier;
+            delete i->second;
         }
     }
 
     void State::LoadFromString(const char* script)
     {
-        if (script && *script)
+        if (HasContent(script))
         {
             std::vector<Token> tokens;
 
@@ -61,5 +60,20 @@ namespace Kelly
             _currentInstruction->Execute();
             _currentInstruction = _currentInstruction->NextInstruction();
         }
+    }
+
+    void State::PrepareIdentifiers()
+    {
+        Identifier::TypeHandle nativeType = Identifier::Keyword
+            | Identifier::DataType;
+
+        Save(new Identifier("int16", nativeType, 0));
+        Save(new Identifier("int32", nativeType, 0));
+        Save(new Identifier("int64", nativeType, 0));
+    }
+
+    void State::Save(Identifier* identifier)
+    {
+        _identifiersByName[identifier->Name()] = identifier;
     }
 }
