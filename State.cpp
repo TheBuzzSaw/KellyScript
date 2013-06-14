@@ -15,12 +15,6 @@ namespace Kelly
     State::~State()
     {
         free(_stack);
-
-        for (auto i = _identifiersByName.begin();
-            i != _identifiersByName.end(); ++i)
-        {
-            delete i->second;
-        }
     }
 
     void State::LoadFromString(const char* script)
@@ -64,16 +58,6 @@ namespace Kelly
 
     void State::PrepareIdentifiers()
     {
-        Identifier::TypeHandle nativeType = Identifier::Keyword
-            | Identifier::DataType;
-
-        Save(new Identifier("int16", nativeType, 0));
-        Save(new Identifier("int32", nativeType, 0));
-        Save(new Identifier("int64", nativeType, 0));
-    }
-
-    void State::Save(Identifier* identifier)
-    {
-        _identifiersByName[identifier->Name()] = identifier;
+        //TypeHandle nativeType = KeywordType | DataTypeType;
     }
 }

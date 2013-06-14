@@ -35,8 +35,8 @@
 		</Compiler>
 		<Unit filename="AST/Expression.cpp" />
 		<Unit filename="AST/Expression.hpp" />
-		<Unit filename="AST/Identifier.cpp" />
-		<Unit filename="AST/Identifier.hpp" />
+		<Unit filename="Identifier.cpp" />
+		<Unit filename="Identifier.hpp" />
 		<Unit filename="Instruction.cpp" />
 		<Unit filename="Instruction.hpp" />
 		<Unit filename="Primitives.hpp" />
