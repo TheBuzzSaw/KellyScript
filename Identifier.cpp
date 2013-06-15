@@ -2,8 +2,8 @@
 
 namespace Kelly
 {
-    Identifier::Identifier(std::string name, TypeHandle type,
-        Identifier* parent) : _name(std::move(name)), _type(type),
+    Identifier::Identifier(std::string name, Type type, Identifier* parent)
+        : _name(std::move(name)), _type((int)type),
         _parent(parent)
     {
         if (_parent) _parent->_childrenByName[_name] = this;

@@ -6,22 +6,24 @@
 
 namespace Kelly
 {
-    typedef int TypeHandle;
-
-    static const TypeHandle KeywordType = 1 << 0;
-    static const TypeHandle DataTypeType = 1 << 1;
-    static const TypeHandle VariableType = 1 << 2;
-    static const TypeHandle PackageType = 1 << 3;
-
     class Identifier
     {
         public:
-            Identifier(std::string name, TypeHandle type,
+            enum class Type : int
+            {
+                Keyword = 1 << 0,
+                DataType = 1 << 1,
+                Function = 1 << 2,
+                Package = 1 << 3,
+                Variable = 1 << 4
+            };
+
+            Identifier(std::string name, Type type,
                 Identifier* parent = 0);
             virtual ~Identifier();
 
             inline std::string Name() const { return _name; }
-            inline bool IsType(TypeHandle type) const { return _type & type; }
+            inline bool Is(Type type) const { return _type & (int)type; }
 
             Identifier* Child(const std::string& name) const;
 
@@ -33,7 +35,7 @@ namespace Kelly
             Identifier& operator=(Identifier&& other);
 
             std::string _name;
-            TypeHandle _type;
+            int _type;
             Identifier* _parent;
             std::map<std::string, Identifier*> _childrenByName;
     };
