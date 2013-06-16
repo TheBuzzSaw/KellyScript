@@ -9,7 +9,7 @@ namespace Kelly
     class Token
     {
         public:
-            enum Types { None, Identifier, StringLiteral, NumberLiteral,
+            enum class Types { None, Identifier, StringLiteral, NumberLiteral,
                 Operator };
 
             Token(const char* buffer);

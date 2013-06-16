@@ -60,7 +60,7 @@ namespace Kelly
 
     Token::Token(const char* buffer)
     {
-        _type = None;
+        _type = Types::None;
         _start = buffer;
         _length = 0;
 
@@ -123,7 +123,7 @@ namespace Kelly
 
     void Token::ParseIdentifier()
     {
-        _type = Identifier;
+        _type = Types::Identifier;
 
         while (IsIdentifierSafe(_start[++_length]))
             ;
@@ -131,7 +131,7 @@ namespace Kelly
 
     void Token::ParseNumberLiteral()
     {
-        _type = NumberLiteral;
+        _type = Types::NumberLiteral;
 
         bool consumedDecimal = false;
 
@@ -154,7 +154,7 @@ namespace Kelly
 
     void Token::ParseStringLiteral()
     {
-        _type = StringLiteral;
+        _type = Types::StringLiteral;
 
         while (true)
         {
@@ -167,7 +167,7 @@ namespace Kelly
             }
             else if (!c || c == '\n' || c == '\r')
             {
-                _type = None;
+                _type = Types::None;
                 _length = 0;
                 break;
             }
@@ -176,7 +176,7 @@ namespace Kelly
 
     void Token::ParseOperator()
     {
-        _type = Operator;
+        _type = Types::Operator;
 
         while (IsOperator(_start[++_length]))
             ;
@@ -188,11 +188,11 @@ namespace Kelly
 
         switch (type)
         {
-            case Token::None: result = "none"; break;
-            case Token::Identifier: result = "identifier"; break;
-            case Token::StringLiteral: result = "string literal"; break;
-            case Token::NumberLiteral: result = "number literal"; break;
-            case Token::Operator: result = "operator"; break;
+            case Token::Types::None: result = "none"; break;
+            case Token::Types::Identifier: result = "identifier"; break;
+            case Token::Types::StringLiteral: result = "string literal"; break;
+            case Token::Types::NumberLiteral: result = "number literal"; break;
+            case Token::Types::Operator: result = "operator"; break;
 
             default:
                 break;
