@@ -25,7 +25,7 @@ namespace Kelly
 
             Token token(script);
 
-            while (token.Type() != Token::Types::None)
+            while (token.Type() != TokenType::None)
             {
                 tokens.push_back(token);
                 token = Token(token.Start() + token.Length());

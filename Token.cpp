@@ -60,7 +60,7 @@ namespace Kelly
 
     Token::Token(const char* buffer)
     {
-        _type = Types::None;
+        _type = TokenType::None;
         _start = buffer;
         _length = 0;
 
@@ -123,7 +123,7 @@ namespace Kelly
 
     void Token::ParseIdentifier()
     {
-        _type = Types::Identifier;
+        _type = TokenType::Identifier;
 
         while (IsIdentifierSafe(_start[++_length]))
             ;
@@ -131,7 +131,7 @@ namespace Kelly
 
     void Token::ParseNumberLiteral()
     {
-        _type = Types::NumberLiteral;
+        _type = TokenType::NumberLiteral;
 
         bool consumedDecimal = false;
 
@@ -154,7 +154,7 @@ namespace Kelly
 
     void Token::ParseStringLiteral()
     {
-        _type = Types::StringLiteral;
+        _type = TokenType::StringLiteral;
 
         while (true)
         {
@@ -167,7 +167,7 @@ namespace Kelly
             }
             else if (!c || c == '\n' || c == '\r')
             {
-                _type = Types::None;
+                _type = TokenType::None;
                 _length = 0;
                 break;
             }
@@ -176,23 +176,23 @@ namespace Kelly
 
     void Token::ParseOperator()
     {
-        _type = Types::Operator;
+        _type = TokenType::Operator;
 
         while (IsOperator(_start[++_length]))
             ;
     }
 
-    std::ostream& operator<<(std::ostream& stream, Token::Types type)
+    std::ostream& operator<<(std::ostream& stream, TokenType type)
     {
         const char* result = "unknown";
 
         switch (type)
         {
-            case Token::Types::None: result = "none"; break;
-            case Token::Types::Identifier: result = "identifier"; break;
-            case Token::Types::StringLiteral: result = "string literal"; break;
-            case Token::Types::NumberLiteral: result = "number literal"; break;
-            case Token::Types::Operator: result = "operator"; break;
+            case TokenType::None: result = "none"; break;
+            case TokenType::Identifier: result = "identifier"; break;
+            case TokenType::StringLiteral: result = "string literal"; break;
+            case TokenType::NumberLiteral: result = "number literal"; break;
+            case TokenType::Operator: result = "operator"; break;
 
             default:
                 break;
