@@ -4,14 +4,12 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-    //cout << "map size: " << sizeof(std::map<std::string, int*>) << endl;
-
     if (argc > 1)
     {
         char* path = argv[1];
-        Kelly::State state;
+        Kelly::State state = Kelly::State::FromFile(path);
 
-        if (state.LoadFromFile(path))
+        if (state.IsReady())
         {
             cout << "Load successful." << endl;
         }

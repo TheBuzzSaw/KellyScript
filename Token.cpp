@@ -3,64 +3,61 @@
 
 namespace Kelly
 {
-    namespace
+    inline bool IsBetween(char input, char first, char last)
     {
-        inline bool IsBetween(char input, char first, char last)
+        return first <= input && input <= last;
+    }
+
+    inline bool IsLowercase(char input)
+    {
+        return IsBetween(input, 'a', 'z');
+    }
+
+    inline bool IsUppercase(char input)
+    {
+        return IsBetween(input, 'A', 'Z');
+    }
+
+    inline bool IsLetter(char input)
+    {
+        return IsLowercase(input) || IsUppercase(input);
+    }
+
+    inline bool IsDigit(char input)
+    {
+        return IsBetween(input, '0', '9');
+    }
+
+    inline bool IsIdentifierSafe(char input)
+    {
+        return IsLetter(input) || IsDigit(input) || input == '_';
+    }
+
+    bool IsOperator(char input)
+    {
+        bool result = false;
+
+        switch (input)
         {
-            return input >= first && input <= last;
+            case '+':
+            case '-':
+            case '*':
+            case '/':
+            case '=':
+            case '.':
+                result = true;
+                break;
+
+            default:
+                break;
         }
 
-        inline bool IsLowercase(char input)
-        {
-            return IsBetween(input, 'a', 'z');
-        }
-
-        inline bool IsUppercase(char input)
-        {
-            return IsBetween(input, 'A', 'Z');
-        }
-
-        inline bool IsLetter(char input)
-        {
-            return IsLowercase(input) || IsUppercase(input);
-        }
-
-        inline bool IsDigit(char input)
-        {
-            return IsBetween(input, '0', '9');
-        }
-
-        inline bool IsIdentifierSafe(char input)
-        {
-            return IsLetter(input) || IsDigit(input) || input == '_';
-        }
-
-        bool IsOperator(char input)
-        {
-            bool result = false;
-
-            switch (input)
-            {
-                case '+':
-                case '-':
-                case '*':
-                case '/':
-                case '=':
-                case '.':
-                    result = true;
-                    break;
-
-                default:
-                    break;
-            }
-
-            return result;
-        }
+        return result;
     }
 
     Token::Token(const char* buffer)
     {
-        _type = TokenType::None;
+        _type = Types::None;
         _start = buffer;
         _length = 0;
 
@@ -101,14 +98,6 @@ namespace Kelly
         _length = other._length;
     }
 
-    Token::Token(Token&& other)
-    {
-        // Just seeing if C++11 works.
-        _type = other._type;
-        _start = other._start;
-        _length = other._length;
-    }
-
     Token::~Token()
     {
     }
@@ -118,12 +107,18 @@ namespace Kelly
         _type = other._type;
         _start = other._start;
         _length = other._length;
+
         return *this;
+    }
+
+    Token Token::Next() const
+    {
+        return Token(_start + _length);
     }
 
     void Token::ParseIdentifier()
     {
-        _type = TokenType::Identifier;
+        _type = Types::Identifier;
 
         while (IsIdentifierSafe(_start[++_length]))
             ;
@@ -131,7 +126,7 @@ namespace Kelly
 
     void Token::ParseNumberLiteral()
     {
-        _type = TokenType::NumberLiteral;
+        _type = Types::NumberLiteral;
 
         bool consumedDecimal = false;
 
@@ -154,7 +149,7 @@ namespace Kelly
 
     void Token::ParseStringLiteral()
     {
-        _type = TokenType::StringLiteral;
+        _type = Types::StringLiteral;
 
         while (true)
         {
@@ -167,7 +162,7 @@ namespace Kelly
             }
             else if (!c || c == '\n' || c == '\r')
             {
-                _type = TokenType::None;
+                _type = Types::None;
                 _length = 0;
                 break;
             }
@@ -176,23 +171,23 @@ namespace Kelly
 
     void Token::ParseOperator()
     {
-        _type = TokenType::Operator;
+        _type = Types::Operator;
 
         while (IsOperator(_start[++_length]))
             ;
     }
 
-    std::ostream& operator<<(std::ostream& stream, TokenType type)
+    std::ostream& operator<<(std::ostream& stream, Token::Types type)
     {
         const char* result = "unknown";
 
         switch (type)
         {
-            case TokenType::None: result = "none"; break;
-            case TokenType::Identifier: result = "identifier"; break;
-            case TokenType::StringLiteral: result = "string literal"; break;
-            case TokenType::NumberLiteral: result = "number literal"; break;
-            case TokenType::Operator: result = "operator"; break;
+            case Token::Types::None: result = "none"; break;
+            case Token::Types::Identifier: result = "identifier"; break;
+            case Token::Types::StringLiteral: result = "string literal"; break;
+            case Token::Types::NumberLiteral: result = "number literal"; break;
+            case Token::Types::Operator: result = "operator"; break;
 
             default:
                 break;

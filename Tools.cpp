@@ -1,5 +1,5 @@
 #include "Tools.hpp"
-#include <cstdlib>
+//#include <cstdlib>
 #include <fstream>
 
 namespace Kelly
@@ -15,7 +15,7 @@ namespace Kelly
             if (fin)
             {
                 fin.seekg(0, fin.end);
-                size_t length = fin.tellg();
+                auto length = fin.tellg();
                 fin.seekg(0, fin.beg);
 
                 result.resize(length + 1);

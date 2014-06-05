@@ -2,14 +2,50 @@
 #include "Tools.hpp"
 #include "Token.hpp"
 #include <iostream>
+#include <string>
 
 namespace Kelly
 {
-    State::State()
+    State State::FromString(const char* source)
     {
-        _currentInstruction = 0;
-        _stack = malloc(1024 * 1024 * 1);
-        _stackPointer = reinterpret_cast<UInt8*>(_stack);
+        if (HasContent(source))
+        {
+            std::vector<Token> tokens;
+
+            Token token(source);
+
+            while (token.Type() != Token::Types::None)
+            {
+                tokens.push_back(token);
+                token = token.Next();
+            }
+        }
+
+        return State();
+    }
+
+    State State::FromFile(const char* path)
+    {
+        std::vector<char> script = Kelly::FileToString(path);
+
+        return FromString(script.data());
+    }
+
+    State::State()
+        : _currentInstruction(nullptr)
+        , _stack(nullptr)
+        , _stackPointer(nullptr)
+    {
+    }
+
+    State::State(State&& other)
+        : _currentInstruction(other._currentInstruction)
+        , _stack(other._stack)
+        , _stackPointer(other._stackPointer)
+    {
+        other._currentInstruction = nullptr;
+        other._stack = nullptr;
+        other._stackPointer = nullptr;
     }
 
     State::~State()
@@ -17,34 +53,22 @@ namespace Kelly
         free(_stack);
     }
 
-    void State::LoadFromString(const char* script)
+    State& State::operator=(State&& other)
     {
-        if (HasContent(script))
+        if (this != &other)
         {
-            std::vector<Token> tokens;
+            free(_stack);
 
-            Token token(script);
+            _currentInstruction = other._currentInstruction;
+            _stack = other._stack;
+            _stackPointer = other._stackPointer;
 
-            while (token.Type() != TokenType::None)
-            {
-                tokens.push_back(token);
-                token = Token(token.Start() + token.Length());
-            }
-        }
-    }
-
-    bool State::LoadFromFile(const char* path)
-    {
-        bool result = false;
-        std::vector<char> script = Kelly::FileToString(path);
-
-        if (script.size() > 0)
-        {
-            result = true;
-            LoadFromString(&script[0]);
+            other._currentInstruction = nullptr;
+            other._stack = nullptr;
+            other._stackPointer = nullptr;
         }
 
-        return result;
+        return *this;
     }
 
     void State::Step()

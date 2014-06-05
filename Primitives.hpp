@@ -1,8 +1,7 @@
 #ifndef PRIMITIVES_HPP
 #define PRIMITIVES_HPP
 
-#include <cstdlib>
-#include <stdint.h>
+#include <cstdint>
 
 namespace Kelly
 {
@@ -16,7 +15,7 @@ namespace Kelly
     typedef uint32_t UInt32;
     typedef uint64_t UInt64;
 
-    typedef size_t Size;
+    typedef std::size_t Size;
 }
 
 #endif
