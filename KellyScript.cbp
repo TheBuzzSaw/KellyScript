@@ -42,10 +42,14 @@
 		<Unit filename="Primitives.hpp" />
 		<Unit filename="State.cpp" />
 		<Unit filename="State.hpp" />
+		<Unit filename="SyntaxTree.cpp" />
+		<Unit filename="SyntaxTree.hpp" />
 		<Unit filename="Token.cpp" />
 		<Unit filename="Token.hpp" />
 		<Unit filename="Tools.cpp" />
 		<Unit filename="Tools.hpp" />
+		<Unit filename="TypeDefinition.cpp" />
+		<Unit filename="TypeDefinition.hpp" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />

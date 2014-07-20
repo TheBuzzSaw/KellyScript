@@ -19,7 +19,7 @@ namespace Kelly
                 fin.seekg(0, fin.beg);
 
                 result.resize(length + 1);
-                fin.read(&result[0], length);
+                fin.read(result.data(), length);
                 result[length] = 0;
 
                 fin.close();

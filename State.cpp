@@ -33,38 +33,33 @@ namespace Kelly
 
     State::State()
         : _currentInstruction(nullptr)
-        , _stack(nullptr)
         , _stackPointer(nullptr)
     {
+        _stack.resize(1024);
     }
 
     State::State(State&& other)
         : _currentInstruction(other._currentInstruction)
-        , _stack(other._stack)
+        , _stack(std::move(other._stack))
         , _stackPointer(other._stackPointer)
     {
         other._currentInstruction = nullptr;
-        other._stack = nullptr;
         other._stackPointer = nullptr;
     }
 
     State::~State()
     {
-        free(_stack);
     }
 
     State& State::operator=(State&& other)
     {
         if (this != &other)
         {
-            free(_stack);
-
             _currentInstruction = other._currentInstruction;
-            _stack = other._stack;
+            _stack = std::move(other._stack);
             _stackPointer = other._stackPointer;
 
             other._currentInstruction = nullptr;
-            other._stack = nullptr;
             other._stackPointer = nullptr;
         }
 

@@ -5,6 +5,7 @@
 #include "Primitives.hpp"
 #include "Identifier.hpp"
 #include <map>
+#include <vector>
 
 namespace Kelly
 {
@@ -32,7 +33,7 @@ namespace Kelly
             void PrepareIdentifiers();
 
             Instruction* _currentInstruction;
-            void* _stack;
+            std::vector<UInt8> _stack;
             UInt8* _stackPointer;
     };
 }
