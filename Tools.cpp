@@ -15,7 +15,7 @@ namespace Kelly
             if (fin)
             {
                 fin.seekg(0, fin.end);
-                auto length = fin.tellg();
+                size_t length = fin.tellg();
                 fin.seekg(0, fin.beg);
 
                 result.resize(length + 1);

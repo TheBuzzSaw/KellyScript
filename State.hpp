@@ -2,7 +2,6 @@
 #define STATE_HPP
 
 #include "Instruction.hpp"
-#include "Primitives.hpp"
 #include "Identifier.hpp"
 #include <map>
 #include <vector>
@@ -33,8 +32,8 @@ namespace Kelly
             void PrepareIdentifiers();
 
             Instruction* _currentInstruction;
-            std::vector<UInt8> _stack;
-            UInt8* _stackPointer;
+            std::vector<uint8_t> _stack;
+            uint8_t* _stackPointer;
     };
 }
 

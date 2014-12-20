@@ -3,32 +3,32 @@
 
 namespace Kelly
 {
-    inline bool IsBetween(char input, char first, char last)
+    constexpr bool IsBetween(char input, char first, char last)
     {
         return first <= input && input <= last;
     }
 
-    inline bool IsLowercase(char input)
+    constexpr bool IsLowercase(char input)
     {
         return IsBetween(input, 'a', 'z');
     }
 
-    inline bool IsUppercase(char input)
+    constexpr bool IsUppercase(char input)
     {
         return IsBetween(input, 'A', 'Z');
     }
 
-    inline bool IsLetter(char input)
+    constexpr bool IsLetter(char input)
     {
         return IsLowercase(input) || IsUppercase(input);
     }
 
-    inline bool IsDigit(char input)
+    constexpr bool IsDigit(char input)
     {
         return IsBetween(input, '0', '9');
     }
 
-    inline bool IsIdentifierSafe(char input)
+    constexpr bool IsIdentifierSafe(char input)
     {
         return IsLetter(input) || IsDigit(input) || input == '_';
     }
@@ -58,11 +58,12 @@ namespace Kelly
     Token::Token(const char* buffer)
     {
         _type = Types::None;
-        _start = buffer;
-        _length = 0;
+        _view.first = buffer;
+        _view.length = 0;
 
-        if (_start)
+        if (_view.first)
         {
+            const char*& _start = _view.first;
             while (*_start && (*_start == ' ' || *_start == '\n'
                 || *_start == '\r'))
             {
@@ -91,36 +92,16 @@ namespace Kelly
         }
     }
 
-    Token::Token(const Token& other)
-    {
-        _type = other._type;
-        _start = other._start;
-        _length = other._length;
-    }
-
-    Token::~Token()
-    {
-    }
-
-    Token& Token::operator=(const Token& other)
-    {
-        _type = other._type;
-        _start = other._start;
-        _length = other._length;
-
-        return *this;
-    }
-
     Token Token::Next() const
     {
-        return Token(_start + _length);
+        return Token(end(_view));
     }
 
     void Token::ParseIdentifier()
     {
         _type = Types::Identifier;
 
-        while (IsIdentifierSafe(_start[++_length]))
+        while (IsIdentifierSafe(_view.first[++_view.length]))
             ;
     }
 
@@ -132,7 +113,7 @@ namespace Kelly
 
         while (true)
         {
-            char c = _start[++_length];
+            char c = _view.first[++_view.length];
 
             if (c == '.')
             {
@@ -153,17 +134,17 @@ namespace Kelly
 
         while (true)
         {
-            char c = _start[++_length];
+            char c = _view.first[++_view.length];
 
             if (c == '"')
             {
-                ++_length;
+                ++_view.length;
                 break;
             }
             else if (!c || c == '\n' || c == '\r')
             {
                 _type = Types::None;
-                _length = 0;
+                _view.length = 0;
                 break;
             }
         }
@@ -173,7 +154,7 @@ namespace Kelly
     {
         _type = Types::Operator;
 
-        while (IsOperator(_start[++_length]))
+        while (IsOperator(_view.first[++_view.length]))
             ;
     }
 
@@ -200,11 +181,11 @@ namespace Kelly
 
     std::ostream& operator<<(std::ostream& stream, const Token& token)
     {
-        const char* start = token.Start();
+        const char* start = token._view.first;
 
         if (start)
         {
-            for (Size i = 0; i < token.Length(); ++i)
+            for (std::size_t i = 0; i < token._view.length; ++i)
                 stream << start[i];
         }
 

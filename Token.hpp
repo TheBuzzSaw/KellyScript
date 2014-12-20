@@ -1,8 +1,8 @@
 #ifndef TOKEN_HPP
 #define TOKEN_HPP
 
-#include "Primitives.hpp"
 #include <iostream>
+#include "View.hpp"
 
 namespace Kelly
 {
@@ -13,16 +13,19 @@ namespace Kelly
                 NumberLiteral, Operator };
 
             Token(const char* buffer);
-            Token(const Token& other);
-            ~Token();
+            Token(const Token& other) = default;
+            ~Token() = default;
 
-            Token& operator=(const Token& other);
+            Token& operator=(const Token& other) = default;
 
-            inline Size Length() const { return _length; }
-            inline const char* Start() const { return _start; }
+
             inline Types Type() const { return _type; }
 
             Token Next() const;
+
+            friend std::ostream& operator<<(
+                std::ostream& stream,
+                const Token& token);
 
         protected:
         private:
@@ -32,12 +35,10 @@ namespace Kelly
             void ParseOperator();
 
             Types _type;
-            const char* _start;
-            Size _length;
+            View<const char> _view;
     };
 
     std::ostream& operator<<(std::ostream& stream, Token::Types type);
-    std::ostream& operator<<(std::ostream& stream, const Token& token);
 }
 
 #endif
