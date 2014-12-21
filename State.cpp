@@ -12,12 +12,12 @@ namespace Kelly
         {
             std::vector<Token> tokens;
 
-            Token token(source);
+            Token token = FromSource(source);
 
-            while (token.Type() != Token::Types::None)
+            while (token.type != Token::Types::None)
             {
                 tokens.push_back(token);
-                token = token.Next();
+                token = FromSource(token.view.first + token.view.length);
             }
         }
 

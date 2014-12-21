@@ -55,65 +55,23 @@ namespace Kelly
         return result;
     }
 
-    Token::Token(const char* buffer)
+    void ParseIdentifier(Token& token)
     {
-        _type = Types::None;
-        _view.first = buffer;
-        _view.length = 0;
+        token.type = Token::Types::Identifier;
 
-        if (_view.first)
-        {
-            const char*& _start = _view.first;
-            while (*_start && (*_start == ' ' || *_start == '\n'
-                || *_start == '\r'))
-            {
-                ++_start;
-            }
-
-            char c = *_start; // I hate typing.
-            //printf("starting -- %d -- %c\n", _start - buffer, c);
-
-            if (IsDigit(c))
-            {
-                ParseNumberLiteral();
-            }
-            else if (c == '"')
-            {
-                ParseStringLiteral();
-            }
-            else if (c == '_' || IsLetter(c))
-            {
-                ParseIdentifier();
-            }
-            else if (IsOperator(c))
-            {
-                ParseOperator();
-            }
-        }
-    }
-
-    Token Token::Next() const
-    {
-        return Token(end(_view));
-    }
-
-    void Token::ParseIdentifier()
-    {
-        _type = Types::Identifier;
-
-        while (IsIdentifierSafe(_view.first[++_view.length]))
+        while (IsIdentifierSafe(token.view.first[++token.view.length]))
             ;
     }
 
-    void Token::ParseNumberLiteral()
+    void ParseNumberLiteral(Token& token)
     {
-        _type = Types::NumberLiteral;
+        token.type = Token::Types::NumberLiteral;
 
         bool consumedDecimal = false;
 
         while (true)
         {
-            char c = _view.first[++_view.length];
+            char c = token.view.first[++token.view.length];
 
             if (c == '.')
             {
@@ -128,34 +86,69 @@ namespace Kelly
         }
     }
 
-    void Token::ParseStringLiteral()
+    void ParseStringLiteral(Token& token)
     {
-        _type = Types::StringLiteral;
+        token.type = Token::Types::StringLiteral;
 
         while (true)
         {
-            char c = _view.first[++_view.length];
+            char c = token.view.first[++token.view.length];
 
             if (c == '"')
             {
-                ++_view.length;
+                ++token.view.length;
                 break;
             }
             else if (!c || c == '\n' || c == '\r')
             {
-                _type = Types::None;
-                _view.length = 0;
+                token.type = Token::Types::None;
+                token.view.length = 0;
                 break;
             }
         }
     }
 
-    void Token::ParseOperator()
+    void ParseOperator(Token& token)
     {
-        _type = Types::Operator;
+        token.type = Token::Types::Operator;
 
-        while (IsOperator(_view.first[++_view.length]))
+        while (IsOperator(token.view.first[++token.view.length]))
             ;
+    }
+
+    Token FromSource(const char* buffer)
+    {
+        Token result;
+        result.type = Token::Types::None;
+        result.view.first = buffer;
+        result.view.length = 0;
+
+        if (result.view.first)
+        {
+            const char*& i = result.view.first;
+            while (*i && (*i == ' ' || *i == '\n' || *i == '\r')) ++i;
+
+            char c = *i;
+
+            if (IsDigit(c))
+            {
+                ParseNumberLiteral(result);
+            }
+            else if (c == '"')
+            {
+                ParseStringLiteral(result);
+            }
+            else if (c == '_' || IsLetter(c))
+            {
+                ParseIdentifier(result);
+            }
+            else if (IsOperator(c))
+            {
+                ParseOperator(result);
+            }
+        }
+
+        return result;
     }
 
     std::ostream& operator<<(std::ostream& stream, Token::Types type)
@@ -174,21 +167,11 @@ namespace Kelly
                 break;
         }
 
-        stream << result;
-
-        return stream;
+        return stream << result;
     }
 
     std::ostream& operator<<(std::ostream& stream, const Token& token)
     {
-        const char* start = token._view.first;
-
-        if (start)
-        {
-            for (std::size_t i = 0; i < token._view.length; ++i)
-                stream << start[i];
-        }
-
-        return stream;
+        return stream << token.type << ": " << token.view;
     }
 }

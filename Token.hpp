@@ -6,38 +6,24 @@
 
 namespace Kelly
 {
-    class Token
+    struct Token
     {
-        public:
-            enum class Types { None, Identifier, StringLiteral,
-                NumberLiteral, Operator };
+        enum class Types
+        {
+            None,
+            Identifier,
+            StringLiteral,
+            NumberLiteral,
+            Operator
+        };
 
-            Token(const char* buffer);
-            Token(const Token& other) = default;
-            ~Token() = default;
-
-            Token& operator=(const Token& other) = default;
-
-
-            inline Types Type() const { return _type; }
-
-            Token Next() const;
-
-            friend std::ostream& operator<<(
-                std::ostream& stream,
-                const Token& token);
-
-        protected:
-        private:
-            void ParseIdentifier();
-            void ParseNumberLiteral();
-            void ParseStringLiteral();
-            void ParseOperator();
-
-            Types _type;
-            View<const char> _view;
+        Types type;
+        View<const char> view;
     };
 
+    Token FromSource(const char* buffer);
+
+    std::ostream& operator<<(std::ostream& stream, const Token& token);
     std::ostream& operator<<(std::ostream& stream, Token::Types type);
 }
 
