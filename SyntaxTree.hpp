@@ -1,7 +1,9 @@
 #ifndef SYNTAXTREE_HPP
 #define SYNTAXTREE_HPP
 
+#include "View.hpp"
 #include "TypeDefinition.hpp"
+#include "Token.hpp"
 #include <vector>
 #include <unordered_map>
 
@@ -10,7 +12,7 @@ namespace Kelly
     class SyntaxTree
     {
         public:
-            SyntaxTree();
+            SyntaxTree(View<char*> arguments);
             SyntaxTree(SyntaxTree&& other);
             ~SyntaxTree();
 
@@ -23,6 +25,7 @@ namespace Kelly
 
             void Add(TypeDefinition td);
 
+            std::vector<Token> _tokens;
             std::vector<TypeDefinition> _typeDefinitions;
             std::unordered_map<std::string,
                 decltype(_typeDefinitions)::size_type>

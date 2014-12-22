@@ -8,8 +8,8 @@ namespace Kelly
     template<typename T>
     struct View
     {
-        T* first;
-        std::size_t length;
+        T* first = nullptr;
+        std::size_t length = 0;
     };
 
     template<typename T>

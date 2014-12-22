@@ -17,8 +17,10 @@ namespace Kelly
             Operator
         };
 
-        Types type;
+        Types type = Types::None;
         View<const char> view;
+        int row = 0;
+        int column = 0;
     };
 
     Token FromSource(const char* buffer);

@@ -1,9 +1,25 @@
 #include "SyntaxTree.hpp"
+#include <iostream>
+using namespace std;
 
 namespace Kelly
 {
-    SyntaxTree::SyntaxTree()
+    SyntaxTree::SyntaxTree(View<char*> arguments)
     {
+        // Process all flags first.
+
+        for (auto i : arguments)
+        {
+            if (i[0] == '-') cout << "flag " << i << '\n';
+        }
+
+        // Now compile files.
+
+        for (auto i : arguments)
+        {
+            if (i[0] != '-') cout << "file " << i << '\n';
+        }
+
         Add(TypeDefinition("Int8", 1));
         Add(TypeDefinition("Int16", 2));
         Add(TypeDefinition("Int32", 4));
