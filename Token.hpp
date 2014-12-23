@@ -11,6 +11,7 @@ namespace Kelly
         enum class Types
         {
             None,
+            Space,
             Identifier,
             StringLiteral,
             NumberLiteral,
@@ -18,7 +19,8 @@ namespace Kelly
         };
 
         Types type = Types::None;
-        View<const char> view;
+        View<const char> source;
+        const char* file = nullptr;
         int row = 0;
         int column = 0;
     };

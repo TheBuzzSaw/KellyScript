@@ -59,7 +59,7 @@ namespace Kelly
     {
         token.type = Token::Types::Identifier;
 
-        while (IsIdentifierSafe(token.view.first[++token.view.length]))
+        while (IsIdentifierSafe(token.source.first[++token.source.length]))
             ;
     }
 
@@ -71,7 +71,7 @@ namespace Kelly
 
         while (true)
         {
-            char c = token.view.first[++token.view.length];
+            char c = token.source.first[++token.source.length];
 
             if (c == '.')
             {
@@ -92,17 +92,17 @@ namespace Kelly
 
         while (true)
         {
-            char c = token.view.first[++token.view.length];
+            char c = token.source.first[++token.source.length];
 
             if (c == '"')
             {
-                ++token.view.length;
+                ++token.source.length;
                 break;
             }
             else if (!c || c == '\n' || c == '\r')
             {
                 token.type = Token::Types::None;
-                token.view.length = 0;
+                token.source.length = 0;
                 break;
             }
         }
@@ -112,7 +112,7 @@ namespace Kelly
     {
         token.type = Token::Types::Operator;
 
-        while (IsOperator(token.view.first[++token.view.length]))
+        while (IsOperator(token.source.first[++token.source.length]))
             ;
     }
 
@@ -120,12 +120,12 @@ namespace Kelly
     {
         Token result;
         result.type = Token::Types::None;
-        result.view.first = buffer;
-        result.view.length = 0;
+        result.source.first = buffer;
+        result.source.length = 0;
 
-        if (result.view.first)
+        if (result.source.first)
         {
-            const char*& i = result.view.first;
+            const char*& i = result.source.first;
             while (*i && (*i == ' ' || *i == '\n' || *i == '\r')) ++i;
 
             char c = *i;
@@ -158,6 +158,7 @@ namespace Kelly
         switch (type)
         {
             case Token::Types::None: result = "none"; break;
+            case Token::Types::Space: result = "space"; break;
             case Token::Types::Identifier: result = "identifier"; break;
             case Token::Types::StringLiteral: result = "string literal"; break;
             case Token::Types::NumberLiteral: result = "number literal"; break;
@@ -172,6 +173,6 @@ namespace Kelly
 
     std::ostream& operator<<(std::ostream& stream, const Token& token)
     {
-        return stream << token.type << ": " << token.view;
+        return stream << token.type << ": " << token.source;
     }
 }

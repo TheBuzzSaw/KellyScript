@@ -17,7 +17,7 @@ namespace Kelly
             while (token.type != Token::Types::None)
             {
                 tokens.push_back(token);
-                token = FromSource(token.view.first + token.view.length);
+                token = FromSource(token.source.first + token.source.length);
             }
         }
 

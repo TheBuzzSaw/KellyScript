@@ -35,6 +35,8 @@
 		</Compiler>
 		<Unit filename="AST/Expression.cpp" />
 		<Unit filename="AST/Expression.hpp" />
+		<Unit filename="DynamicStack.cpp" />
+		<Unit filename="DynamicStack.hpp" />
 		<Unit filename="Identifier.cpp" />
 		<Unit filename="Identifier.hpp" />
 		<Unit filename="Instruction.cpp" />

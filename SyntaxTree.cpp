@@ -8,16 +8,20 @@ namespace Kelly
     {
         // Process all flags first.
 
-        for (auto i : arguments)
+        for (const auto i : arguments)
         {
             if (i[0] == '-') cout << "flag " << i << '\n';
         }
 
         // Now compile files.
 
-        for (auto i : arguments)
+        for (const auto i : arguments)
         {
-            if (i[0] != '-') cout << "file " << i << '\n';
+            if (i[0] != '-')
+            {
+                cout << "file " << i << '\n';
+
+            }
         }
 
         Add(TypeDefinition("Int8", 1));
