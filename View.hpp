@@ -9,7 +9,7 @@ namespace Kelly
     struct View
     {
         T* first = nullptr;
-        std::size_t length = 0;
+        size_t length = 0;
     };
 
     template<typename T>

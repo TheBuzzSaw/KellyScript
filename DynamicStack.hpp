@@ -1,7 +1,7 @@
 #ifndef DYNAMICSTACK_HPP
 #define DYNAMICSTACK_HPP
 
-#include <cstdint>
+#include "View.hpp"
 
 namespace Kelly
 {
@@ -12,11 +12,13 @@ namespace Kelly
             DynamicStack(DynamicStack&& other);
             ~DynamicStack();
 
-            DynamicStack& operator=(DynamicStack&& other);
+            //DynamicStack& operator=(DynamicStack&& other);
 
             size_t PageSize() const { return _pageSize; }
+            size_t PageCount() const;
+            void Dump(std::ostream& stream) const;
 
-            void* Allocate(size_t byteCount);
+            View<uint8_t> Allocate(size_t byteCount);
             void ReleaseAll();
 
         protected:
