@@ -12,7 +12,7 @@ namespace Kelly
             DynamicStack(DynamicStack&& other);
             ~DynamicStack();
 
-            //DynamicStack& operator=(DynamicStack&& other);
+            DynamicStack& operator=(DynamicStack&& other);
 
             size_t PageSize() const { return _pageSize; }
             size_t PageCount() const;
@@ -20,6 +20,7 @@ namespace Kelly
 
             View<uint8_t> Allocate(size_t byteCount);
             void ReleaseAll();
+            void FreePages();
 
         protected:
         private:

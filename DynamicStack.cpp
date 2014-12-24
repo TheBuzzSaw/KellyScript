@@ -28,12 +28,34 @@ namespace Kelly
 
     DynamicStack::~DynamicStack()
     {
+        FreePages();
+    }
+
+    DynamicStack& DynamicStack::operator=(DynamicStack&& other)
+    {
+        if (this != &other)
+        {
+            FreePages();
+
+            _pageSize = other._pageSize;
+            _firstPage = other._firstPage;
+            other._pageSize = 0;
+            other._firstPage = nullptr;
+        }
+
+        return *this;
+    }
+
+    void DynamicStack::FreePages()
+    {
         while (_firstPage)
         {
             void* dead = _firstPage;
             _firstPage = reinterpret_cast<PageHeader*>(_firstPage)->nextPage;
             free(dead);
         }
+
+        _pageSize = 0;
     }
 
     View<uint8_t> DynamicStack::Allocate(size_t byteCount)

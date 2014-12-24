@@ -19,7 +19,7 @@ namespace Kelly
         };
 
         Types type = Types::None;
-        View<const char> source;
+        View<const char> source = { nullptr, 0 };
         const char* file = nullptr;
         int row = 0;
         int column = 0;

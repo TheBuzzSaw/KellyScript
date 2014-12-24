@@ -51,6 +51,8 @@
 		<Unit filename="Tools.hpp" />
 		<Unit filename="TypeDefinition.cpp" />
 		<Unit filename="TypeDefinition.hpp" />
+		<Unit filename="Utf8Character.cpp" />
+		<Unit filename="Utf8Character.hpp" />
 		<Unit filename="View.hpp" />
 		<Unit filename="main.cpp" />
 		<Extensions>

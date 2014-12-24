@@ -2,15 +2,43 @@
 #define VIEW_HPP
 
 #include <iostream>
+#include <cstring>
 
 namespace Kelly
 {
     template<typename T>
     struct View
     {
-        T* first = nullptr;
-        size_t length = 0;
+        T* first;
+        size_t length;
     };
+
+    template<typename T>
+    bool operator==(const View<T>& a, const View<T>& b)
+    {
+        return
+            a.length == b.length &&
+            (a.first == b.first ||
+            !memcmp(a.first, b.first, a.length * sizeof(T)));
+    }
+
+    template<typename T>
+    bool operator<(const View<T>& a, const View<T>& b)
+    {
+        return
+            a.length < b.length ||
+            (a.length == b.length &&
+            memcmp(a.first, b.first, a.length * sizeof(T)) < 0);
+    }
+
+    template<typename T>
+    bool operator>(const View<T>& a, const View<T>& b)
+    {
+        return
+            a.length > b.length ||
+            (a.length == b.length &&
+            memcmp(a.first, b.first, a.length * sizeof(T)) > 0);
+    }
 
     template<typename T>
     constexpr const T* begin(const View<T>& view)

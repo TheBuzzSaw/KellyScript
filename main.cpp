@@ -1,21 +1,18 @@
 #include "SyntaxTree.hpp"
 #include "DynamicStack.hpp"
 #include <iostream>
-#include <cstring>
+#include <vector>
 using namespace std;
 using namespace Kelly;
 
-View<char> Allocate(DynamicStack& ds, const char* text)
+const View<char> Allocate(DynamicStack& ds, const char* text)
 {
     size_t length = strlen(text);
 
     auto view = ds.Allocate(length);
     memcpy(view.first, text, length);
 
-    View<char> result;
-    result.first = reinterpret_cast<char*>(view.first);
-    result.length = view.length;
-    return result;
+    return { reinterpret_cast<char*>(view.first), view.length };
 }
 
 void TestDynamicStack()
@@ -29,35 +26,38 @@ void TestDynamicStack()
         "Earth",
         "Science",
         "Religion",
+        "Power",
+        "Necromancy",
+        "ASDF",
+        "White",
+        "Triangle",
         nullptr
     };
 
     DynamicStack ds(64);
+    vector<View<char>> _views;
 
     for (const char** i = strings; *i; ++i)
     {
-        cout << Allocate(ds, *i) << endl;
+        _views.push_back(Allocate(ds, *i));
     }
 
-    //ds.ReleaseAll();
+    for (auto view : _views) cout << view << endl;
+
+    ds.Dump(cout);
+    ds.ReleaseAll();
+    cout << "After ReleaseAll()...\n";
     ds.Dump(cout);
 }
 
 int main(int argc, char** argv)
 {
+    cout << "view size: " << sizeof(View<char>) << endl;
     TestDynamicStack();
-
-    size_t n = 1 << 19;
-
-    for (int i = 0; i < 8; ++i)
-        cout << (n <<= 1) << endl;
 
     if (argc > 1)
     {
-        View<char*> arguments;
-        arguments.first = argv + 1;
-        arguments.length = argc - 1;
-
+        View<char*> arguments = { argv + 1, size_t(argc - 1) };
         SyntaxTree tree(arguments);
     }
     else

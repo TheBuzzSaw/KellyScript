@@ -24,6 +24,7 @@ namespace Kelly
             SyntaxTree& operator=(const SyntaxTree&) = delete;
 
             void Add(TypeDefinition td);
+            void ReadFile(const char* file);
 
             std::vector<Token> _tokens;
             std::vector<TypeDefinition> _typeDefinitions;

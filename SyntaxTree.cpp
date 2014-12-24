@@ -1,4 +1,5 @@
 #include "SyntaxTree.hpp"
+#include "Tools.hpp"
 #include <iostream>
 using namespace std;
 
@@ -20,7 +21,7 @@ namespace Kelly
             if (i[0] != '-')
             {
                 cout << "file " << i << '\n';
-
+                ReadFile(i);
             }
         }
 
@@ -31,9 +32,9 @@ namespace Kelly
     }
 
     SyntaxTree::SyntaxTree(SyntaxTree&& other)
-        : _typeDefinitions(std::move(other._typeDefinitions))
+        : _typeDefinitions(move(other._typeDefinitions))
         , _typeDefinitionIndexByName(
-            std::move(other._typeDefinitionIndexByName))
+            move(other._typeDefinitionIndexByName))
     {
 
     }
@@ -49,7 +50,13 @@ namespace Kelly
         if (i == _typeDefinitionIndexByName.end())
         {
             _typeDefinitionIndexByName[td.Name()] = _typeDefinitions.size();
-            _typeDefinitions.push_back(std::move(td));
+            _typeDefinitions.push_back(move(td));
         }
+    }
+
+    void SyntaxTree::ReadFile(const char* file)
+    {
+        vector<char> content = FileToString(file);
+        cout << "content of " << file << ":\n" << content.data() << endl;
     }
 }
