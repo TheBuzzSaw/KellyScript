@@ -1,6 +1,10 @@
 #include "SyntaxTree.hpp"
 #include "DynamicStack.hpp"
+#include "Utf8CodePoint.hpp"
+#include "Tools.hpp"
 #include <iostream>
+#include <fstream>
+#include <iomanip>
 #include <vector>
 using namespace std;
 using namespace Kelly;
@@ -50,10 +54,48 @@ void TestDynamicStack()
     ds.Dump(cout);
 }
 
+void TestUtf8Content()
+{
+    ofstream fout("dump.txt", ofstream::binary);
+
+    if (!fout) return;
+
+    auto content = FileToString("UTF-8-demo.txt");
+    const char* i = content.data();
+
+    Utf8CodePoint codePoint = GetUtf8CodePoint(i);
+    auto utf32CodePoint = GetUtf32CodePoint(codePoint);
+
+    fout << hex;
+    while (utf32CodePoint > 0)
+    {
+        fout << utf32CodePoint;
+
+        if (utf32CodePoint < 127)
+            fout << " (" << char(utf32CodePoint) << ")";
+
+        fout << '\n';
+
+        i += GetLength(codePoint);
+        codePoint = GetUtf8CodePoint(i);
+        utf32CodePoint = GetUtf32CodePoint(codePoint);
+    }
+
+    fout.close();
+}
+
 int main(int argc, char** argv)
 {
+    Utf8CodePoint cpa;
+    Utf8CodePoint cpb = {};
+
+    TestUtf8Content();
+
+    cout << "code point A: " << cpa.value << endl;
+    cout << "code point B: " << cpb.value << endl;
+
     cout << "view size: " << sizeof(View<char>) << endl;
-    TestDynamicStack();
+    //TestDynamicStack();
 
     if (argc > 1)
     {

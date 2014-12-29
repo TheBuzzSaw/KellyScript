@@ -4,3 +4,5 @@ obj/
 *.layout
 *.cbTemp
 
+/dump.txt
+
