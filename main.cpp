@@ -66,13 +66,14 @@ void TestUtf8Content()
     Utf8CodePoint codePoint = GetUtf8CodePoint(i);
     auto utf32CodePoint = GetUtf32CodePoint(codePoint);
 
-    fout << hex;
     while (utf32CodePoint > 0)
     {
-        fout << utf32CodePoint;
+        fout
+            << hex << "0x" << utf32CodePoint
+            << " (" << dec << utf32CodePoint << ")";
 
-        if (utf32CodePoint < 127)
-            fout << " (" << char(utf32CodePoint) << ")";
+        if (31 < utf32CodePoint && utf32CodePoint < 127)
+            fout << " '" << char(utf32CodePoint) << "'";
 
         fout << '\n';
 
