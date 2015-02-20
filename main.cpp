@@ -2,6 +2,7 @@
 #include "DynamicStack.hpp"
 #include "Utf8CodePoint.hpp"
 #include "Tools.hpp"
+#include "VirtualMachine.hpp"
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -41,7 +42,7 @@ void TestDynamicStack()
     DynamicStack ds(64);
     vector<View<char>> _views;
 
-    for (const char** i = strings; *i; ++i)
+    for (auto i = strings; *i; ++i)
     {
         _views.push_back(Allocate(ds, *i));
     }
@@ -61,7 +62,7 @@ void TestUtf8Content()
     if (!fout) return;
 
     auto content = FileToString("UTF-8-demo.txt");
-    const char* i = content.data();
+    auto i = content.c_str();
 
     Utf8CodePoint codePoint = GetUtf8CodePoint(i);
     auto utf32CodePoint = GetUtf32CodePoint(codePoint);
@@ -70,10 +71,12 @@ void TestUtf8Content()
     {
         fout
             << hex << "0x" << utf32CodePoint
-            << " (" << dec << utf32CodePoint << ")";
+            << " (" << dec << utf32CodePoint << ") '";
 
-        if (31 < utf32CodePoint && utf32CodePoint < 127)
-            fout << " '" << char(utf32CodePoint) << "'";
+        fout.write(codePoint.chars, GetLength(codePoint)) << '\'';
+
+        //if (31 < utf32CodePoint && utf32CodePoint < 127)
+            //fout << " '" << char(utf32CodePoint) << "'";
 
         fout << '\n';
 
@@ -87,16 +90,21 @@ void TestUtf8Content()
 
 int main(int argc, char** argv)
 {
-    Utf8CodePoint cpa;
-    Utf8CodePoint cpb = {};
+    uint8_t bytecodes[] = {
+        Bytecodes::Noop,
+        Bytecodes::PushLiteral16, 0xff, 0x00,
+        Bytecodes::PushLiteral16, 0xff, 0x00,
+        Bytecodes::AddS16,
+        Bytecodes::OutS16,
+        Bytecodes::Exit
+        };
+
+    Run(bytecodes);
 
     TestUtf8Content();
 
-    cout << "code point A: " << cpa.value << endl;
-    cout << "code point B: " << cpb.value << endl;
-
     cout << "view size: " << sizeof(View<char>) << endl;
-    //TestDynamicStack();
+    TestDynamicStack();
 
     if (argc > 1)
     {

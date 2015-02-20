@@ -1,31 +1,26 @@
 #include "Tools.hpp"
-//#include <cstdlib>
 #include <fstream>
+#include <sstream>
 
 namespace Kelly
 {
-    std::vector<char> FileToString(const char* path)
+    std::string FileToString(const char* path)
     {
-        std::vector<char> result;
+        std::string result;
 
-        if (path && *path)
+        if (HasContent(path))
         {
             std::ifstream fin(path, std::ifstream::binary);
 
             if (fin)
             {
-                fin.seekg(0, fin.end);
-                size_t length = fin.tellg();
-                fin.seekg(0, fin.beg);
-
-                result.resize(length + 1);
-                fin.read(result.data(), length);
-                result[length] = 0;
-
+                std::ostringstream oss{};
+                oss << fin.rdbuf();
+                result = oss.str();
                 fin.close();
             }
         }
 
-        return result;
+        return std::move(result);
     }
 }

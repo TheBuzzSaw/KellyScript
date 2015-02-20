@@ -56,7 +56,7 @@ namespace Kelly
 
     void SyntaxTree::ReadFile(const char* file)
     {
-        vector<char> content = FileToString(file);
+        auto content = FileToString(file);
         cout << "content of " << file << ":\n" << content.data() << endl;
     }
 }

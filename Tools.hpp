@@ -1,16 +1,16 @@
 #ifndef TOOLS_HPP
 #define TOOLS_HPP
 
-#include <vector>
+#include <string>
 
 namespace Kelly
 {
-    inline bool HasContent(const char* text)
+    inline bool HasContent(const char* text) noexcept
     {
         return text && *text;
     }
 
-    std::vector<char> FileToString(const char* path);
+    std::string FileToString(const char* path);
 }
 
 #endif

@@ -26,9 +26,9 @@ namespace Kelly
 
     State State::FromFile(const char* path)
     {
-        std::vector<char> script = Kelly::FileToString(path);
+        auto script = Kelly::FileToString(path);
 
-        return FromString(script.data());
+        return FromString(script.c_str());
     }
 
     State::State()

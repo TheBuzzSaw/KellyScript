@@ -35,6 +35,7 @@
 		</Compiler>
 		<Unit filename="AST/Expression.cpp" />
 		<Unit filename="AST/Expression.hpp" />
+		<Unit filename="Bytecodes.hpp" />
 		<Unit filename="DynamicStack.cpp" />
 		<Unit filename="DynamicStack.hpp" />
 		<Unit filename="Identifier.cpp" />
@@ -54,6 +55,8 @@
 		<Unit filename="Utf8CodePoint.cpp" />
 		<Unit filename="Utf8CodePoint.hpp" />
 		<Unit filename="View.hpp" />
+		<Unit filename="VirtualMachine.cpp" />
+		<Unit filename="VirtualMachine.hpp" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />
