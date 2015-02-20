@@ -90,26 +90,24 @@ void TestUtf8Content()
 
 int main(int argc, char** argv)
 {
+    using namespace Bytecodes;
+
     uint8_t bytecodes[] = {
-        Bytecodes::Noop,
-        Bytecodes::PushLiteral16, 0xff, 0x00,
-        Bytecodes::PushLiteral16, 0xff, 0x00,
-        Bytecodes::AddS16,
-        Bytecodes::OutS16,
-        Bytecodes::Exit
+        Noop,
+        //PushLiteral32, 0x00, 0x10, 0x00, 0x00,
+        PushLiteral32, 0x09, 0x00, 0x00, 0x00,
+        PushCopy32,
+        AddS32,
+        OutS32,
+        Exit
         };
 
     Run(bytecodes);
 
-    TestUtf8Content();
-
-    cout << "view size: " << sizeof(View<char>) << endl;
-    TestDynamicStack();
-
     if (argc > 1)
     {
-        View<char*> arguments = { argv + 1, size_t(argc - 1) };
-        SyntaxTree tree(arguments);
+        //View<char*> arguments = { argv + 1, size_t(argc - 1) };
+        //SyntaxTree tree(arguments);
     }
     else
     {
