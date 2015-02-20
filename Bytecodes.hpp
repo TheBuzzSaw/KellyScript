@@ -9,8 +9,12 @@ namespace Kelly
     {
         const uint8_t Noop = 0x00;
         const uint8_t Exit = 0x01;
+        const uint8_t Jump = 0x02;
 
-        const uint8_t Jump = 0x10;
+        const uint8_t Pop8 = 0x10;
+        const uint8_t Pop16 = 0x11;
+        const uint8_t Pop32 = 0x12;
+        const uint8_t Pop64 = 0x13;
 
         const uint8_t PushLiteral8 = 0x20;
         const uint8_t PushLiteral16 = 0x21;
@@ -26,6 +30,11 @@ namespace Kelly
         const uint8_t PushCopy16 = 0x29;
         const uint8_t PushCopy32 = 0x2a;
         const uint8_t PushCopy64 = 0x2b;
+
+        const uint8_t StoreLocal8 = 0x2c;
+        const uint8_t StoreLocal16 = 0x2d;
+        const uint8_t StoreLocal32 = 0x2e;
+        const uint8_t StoreLocal64 = 0x2f;
 
         const uint8_t AddS8 = 0x30;
         const uint8_t AddS16 = 0x31;
@@ -46,6 +55,13 @@ namespace Kelly
         const uint8_t SubU16 = 0x3d;
         const uint8_t SubU32 = 0x3e;
         const uint8_t SubU64 = 0x3f;
+
+        const uint8_t JumpIfEqual8 = 0x60;
+        const uint8_t JumpIfEqual16 = 0x61;
+        const uint8_t JumpIfEqual32 = 0x62;
+        const uint8_t JumpIfEqual64 = 0x63;
+
+        const uint8_t JumpIfGE32 = 0x66;
 
         const uint8_t OutS8 = 0xe0;
         const uint8_t OutS16 = 0xe1;

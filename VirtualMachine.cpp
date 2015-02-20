@@ -1,6 +1,8 @@
 #include "VirtualMachine.hpp"
 
+#include <windows.h>
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <cstring>
 
@@ -28,12 +30,39 @@ namespace Kelly
     }
 
     template<typename T>
+    void PushLocal(
+        const uint8_t*& current,
+        uint8_t*& stackPointer,
+        uint8_t* framePointer)
+    {
+        uint16_t offset = *reinterpret_cast<const uint16_t*>(current + 1);
+        current += 2;
+
+        *reinterpret_cast<T*>(stackPointer) =
+            *reinterpret_cast<const T*>(framePointer + offset);
+
+        stackPointer += sizeof(T);
+    }
+
+    template<typename T>
     void PushCopy(uint8_t*& stackPointer)
     {
         *reinterpret_cast<T*>(stackPointer) =
             *reinterpret_cast<T*>(stackPointer - sizeof(T));
 
         stackPointer += sizeof(T);
+    }
+
+    template<typename T>
+    void StoreLocal(
+        const uint8_t*& current,
+        uint8_t*& stackPointer,
+        uint8_t* framePointer)
+    {
+        uint16_t offset = *reinterpret_cast<const uint16_t*>(current + 1);
+        current += 2;
+
+        *reinterpret_cast<T*>(framePointer + offset) = Pop<T>(stackPointer);
     }
 
     template<typename T>
@@ -52,13 +81,45 @@ namespace Kelly
         uint8_t* framePointer = stackPointer;
         const uint8_t* current = bytecodes;
 
+        std::cerr << std::hex;
+
         while (true)
         {
             using namespace Bytecodes;
+            //std::cerr
+            //  << "offset " << std::dec << (int)(current - bytecodes)
+            //  << " bytecode " << std::hex << (int)(*current) << '\n';
+            //::Sleep(500);
 
             switch(*current)
             {
                 case Noop: break;
+
+                case Jump:
+                {
+                    uint16_t offset =
+                        *reinterpret_cast<const uint16_t*>(current + 1);
+
+                    current = bytecodes + offset - 1;
+
+                    break;
+                }
+
+                case Pop8:
+                    stackPointer -= 1;
+                    break;
+
+                case Pop16:
+                    stackPointer -= 2;
+                    break;
+
+                case Pop32:
+                    stackPointer -= 4;
+                    break;
+
+                case Pop64:
+                    stackPointer -= 8;
+                    break;
 
                 case PushLiteral8:
                     PushLiteral<uint8_t>(current, stackPointer);
@@ -74,6 +135,22 @@ namespace Kelly
 
                 case PushLiteral64:
                     PushLiteral<uint64_t>(current, stackPointer);
+                    break;
+
+                case PushLocal8:
+                    PushLocal<uint8_t>(current, stackPointer, framePointer);
+                    break;
+
+                case PushLocal16:
+                    PushLocal<uint16_t>(current, stackPointer, framePointer);
+                    break;
+
+                case PushLocal32:
+                    PushLocal<uint32_t>(current, stackPointer, framePointer);
+                    break;
+
+                case PushLocal64:
+                    PushLocal<uint64_t>(current, stackPointer, framePointer);
                     break;
 
                 case PushCopy8:
@@ -92,6 +169,22 @@ namespace Kelly
                     PushCopy<uint64_t>(stackPointer);
                     break;
 
+                case StoreLocal8:
+                    StoreLocal<uint8_t>(current, stackPointer, framePointer);
+                    break;
+
+                case StoreLocal16:
+                    StoreLocal<uint16_t>(current, stackPointer, framePointer);
+                    break;
+
+                case StoreLocal32:
+                    StoreLocal<uint32_t>(current, stackPointer, framePointer);
+                    break;
+
+                case StoreLocal64:
+                    StoreLocal<uint64_t>(current, stackPointer, framePointer);
+                    break;
+
                 case AddS8:
                     Add<int8_t>(stackPointer);
                     break;
@@ -107,6 +200,24 @@ namespace Kelly
                 case AddS64:
                     Add<int64_t>(stackPointer);
                     break;
+
+                case JumpIfGE32:
+                {
+                    uint16_t offset =
+                        *reinterpret_cast<const uint16_t*>(current + 1);
+
+                    auto b = Pop<uint32_t>(stackPointer);
+                    auto a = Pop<uint32_t>(stackPointer);
+
+                    //std::cerr << "a " << a << " b " << b << '\n';
+
+                    if (a >= b)
+                        current = bytecodes + offset - 1;
+                    else
+                        current += 2;
+
+                    break;
+                }
 
                 case OutS8:
                     std::cout << Pop<int8_t>(stackPointer) << std::endl;

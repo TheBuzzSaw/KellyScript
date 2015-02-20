@@ -92,14 +92,30 @@ int main(int argc, char** argv)
 {
     using namespace Bytecodes;
 
+    int total = 0;
+    for (int i = 0; i < 16; ++i) total += i;
+    cout << "Answer: " << total << endl;
+
     uint8_t bytecodes[] = {
-        Noop,
-        //PushLiteral32, 0x00, 0x10, 0x00, 0x00,
-        PushLiteral32, 0x09, 0x00, 0x00, 0x00,
-        PushCopy32,
+        PushLiteral32, 0x00, 0x00, 0x00, 0x00, // local 'total'
+        PushLiteral32, 0x00, 0x00, 0x00, 0x00, // local 'i'
+        PushLocal32, 0x04, 0x00, // load 'i'
+        PushLiteral32, 0x10, 0x00, 0x00, 0x00, // load 16
+        JumpIfGE32, 46, 0x00,
+        PushLocal32, 0x00, 0x00, // load 'total'
+        PushLocal32, 0x04, 0x00, // load 'i'
         AddS32,
+        StoreLocal32, 0x00, 0x00, // store 'total'
+        PushLocal32, 0x04, 0x00, // load 'i'
+        PushLiteral32, 0x01, 0x00, 0x00, 0x00,
+        AddS32,
+        StoreLocal32, 0x04, 0x00, // store 'i'
+        Jump, 10, 0x00,
+        PushLocal32, 0x00, 0x00, // load 'total'
         OutS32,
-        Exit
+        Noop,
+        Exit,
+        Noop
         };
 
     Run(bytecodes);
