@@ -112,101 +112,35 @@ namespace Kelly
                     break;
                 }
 
-                case Pop8:
-                    state.stackPointer -= 1;
-                    break;
+                case Pop8: state.stackPointer -= 1; break;
+                case Pop16: state.stackPointer -= 2; break;
+                case Pop32: state.stackPointer -= 4; break;
+                case Pop64: state.stackPointer -= 8; break;
 
-                case Pop16:
-                    state.stackPointer -= 2;
-                    break;
+                case PushLiteral8: PushLiteral<uint8_t>(state); break;
+                case PushLiteral16: PushLiteral<uint16_t>(state); break;
+                case PushLiteral32: PushLiteral<uint32_t>(state); break;
+                case PushLiteral64: PushLiteral<uint64_t>(state); break;
 
-                case Pop32:
-                    state.stackPointer -= 4;
-                    break;
+                case PushLocal8: PushLocal<uint8_t>(state); break;
+                case PushLocal16: PushLocal<uint16_t>(state); break;
+                case PushLocal32: PushLocal<uint32_t>(state); break;
+                case PushLocal64: PushLocal<uint64_t>(state); break;
 
-                case Pop64:
-                    state.stackPointer -= 8;
-                    break;
+                case PushCopy8: PushCopy<uint8_t>(state); break;
+                case PushCopy16: PushCopy<uint16_t>(state); break;
+                case PushCopy32: PushCopy<uint32_t>(state); break;
+                case PushCopy64: PushCopy<uint64_t>(state); break;
 
-                case PushLiteral8:
-                    PushLiteral<uint8_t>(state);
-                    break;
+                case StoreLocal8: StoreLocal<uint8_t>(state); break;
+                case StoreLocal16: StoreLocal<uint16_t>(state); break;
+                case StoreLocal32: StoreLocal<uint32_t>(state); break;
+                case StoreLocal64: StoreLocal<uint64_t>(state); break;
 
-                case PushLiteral16:
-                    PushLiteral<uint16_t>(state);
-                    break;
-
-                case PushLiteral32:
-                    PushLiteral<uint32_t>(state);
-                    break;
-
-                case PushLiteral64:
-                    PushLiteral<uint64_t>(state);
-                    break;
-
-                case PushLocal8:
-                    PushLocal<uint8_t>(state);
-                    break;
-
-                case PushLocal16:
-                    PushLocal<uint16_t>(state);
-                    break;
-
-                case PushLocal32:
-                    PushLocal<uint32_t>(state);
-                    break;
-
-                case PushLocal64:
-                    PushLocal<uint64_t>(state);
-                    break;
-
-                case PushCopy8:
-                    PushCopy<uint8_t>(state);
-                    break;
-
-                case PushCopy16:
-                    PushCopy<uint16_t>(state);
-                    break;
-
-                case PushCopy32:
-                    PushCopy<uint32_t>(state);
-                    break;
-
-                case PushCopy64:
-                    PushCopy<uint64_t>(state);
-                    break;
-
-                case StoreLocal8:
-                    StoreLocal<uint8_t>(state);
-                    break;
-
-                case StoreLocal16:
-                    StoreLocal<uint16_t>(state);
-                    break;
-
-                case StoreLocal32:
-                    StoreLocal<uint32_t>(state);
-                    break;
-
-                case StoreLocal64:
-                    StoreLocal<uint64_t>(state);
-                    break;
-
-                case AddS8:
-                    Add<int8_t>(state);
-                    break;
-
-                case AddS16:
-                    Add<int16_t>(state);
-                    break;
-
-                case AddS32:
-                    Add<int32_t>(state);
-                    break;
-
-                case AddS64:
-                    Add<int64_t>(state);
-                    break;
+                case AddS8: Add<int8_t>(state); break;
+                case AddS16: Add<int16_t>(state); break;
+                case AddS32: Add<int32_t>(state); break;
+                case AddS64: Add<int64_t>(state); break;
 
                 case JumpIfGE32:
                 {
