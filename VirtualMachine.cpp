@@ -8,78 +8,85 @@
 
 namespace Kelly
 {
-    template<typename T>
-    void Push(const void* source, uint8_t*& destination)
+    struct State
     {
-        *reinterpret_cast<T*>(destination) = *reinterpret_cast<const T*>(source);
-        destination += sizeof(T);
+        uint8_t* stackPointer;
+        uint8_t* framePointer;
+        const uint8_t* current;
+    };
+
+    template<typename T>
+    void Push(State& state, const void* source)
+    {
+        *reinterpret_cast<T*>(state.stackPointer) =
+            *reinterpret_cast<const T*>(source);
+        state.stackPointer += sizeof(T);
     }
 
     template<typename T>
-    T Pop(uint8_t*& stackPointer)
+    T Pop(State& state)
     {
-        stackPointer -= sizeof(T);
-        return *reinterpret_cast<const T*>(stackPointer);
+        state.stackPointer -= sizeof(T);
+        return *reinterpret_cast<const T*>(state.stackPointer);
     }
 
     template<typename T>
-    void PushLiteral(const uint8_t*& source, uint8_t*& destination)
+    void PushLiteral(State& state)
     {
-        Push<T>(source + 1, destination);
-        source += sizeof(T);
+        Push<T>(state, state.current + 1);
+        state.current += sizeof(T);
     }
 
     template<typename T>
-    void PushLocal(
-        const uint8_t*& current,
-        uint8_t*& stackPointer,
-        uint8_t* framePointer)
+    void PushLocal(State& state)
     {
-        uint16_t offset = *reinterpret_cast<const uint16_t*>(current + 1);
-        current += 2;
+        uint16_t offset =
+            *reinterpret_cast<const uint16_t*>(state.current + 1);
 
-        *reinterpret_cast<T*>(stackPointer) =
-            *reinterpret_cast<const T*>(framePointer + offset);
+        state.current += 2;
 
-        stackPointer += sizeof(T);
+        *reinterpret_cast<T*>(state.stackPointer) =
+            *reinterpret_cast<const T*>(state.framePointer + offset);
+
+        state.stackPointer += sizeof(T);
     }
 
     template<typename T>
-    void PushCopy(uint8_t*& stackPointer)
+    void PushCopy(State& state)
     {
-        *reinterpret_cast<T*>(stackPointer) =
-            *reinterpret_cast<T*>(stackPointer - sizeof(T));
+        *reinterpret_cast<T*>(state.stackPointer) =
+            *reinterpret_cast<T*>(state.stackPointer - sizeof(T));
 
-        stackPointer += sizeof(T);
+        state.stackPointer += sizeof(T);
     }
 
     template<typename T>
-    void StoreLocal(
-        const uint8_t*& current,
-        uint8_t*& stackPointer,
-        uint8_t* framePointer)
+    void StoreLocal(State& state)
     {
-        uint16_t offset = *reinterpret_cast<const uint16_t*>(current + 1);
-        current += 2;
+        uint16_t offset =
+            *reinterpret_cast<const uint16_t*>(state.current + 1);
 
-        *reinterpret_cast<T*>(framePointer + offset) = Pop<T>(stackPointer);
+        state.current += 2;
+
+        *reinterpret_cast<T*>(state.framePointer + offset) = Pop<T>(state);
     }
 
     template<typename T>
-    void Add(uint8_t*& stackPointer)
+    void Add(State& state)
     {
-        T a = Pop<T>(stackPointer);
-        T b = Pop<T>(stackPointer);
+        T a = Pop<T>(state);
+        T b = Pop<T>(state);
         T c = a + b;
-        Push<T>(&c, stackPointer);
+        Push<T>(state, &c);
     }
 
     void Run(const uint8_t* bytecodes)
     {
         std::vector<uint8_t> memStack(1024);
-        uint8_t* stackPointer = memStack.data();
-        uint8_t* framePointer = stackPointer;
-        const uint8_t* current = bytecodes;
+        State state;
+        state.stackPointer = memStack.data();
+        state.framePointer = state.stackPointer;
+        state.current = bytecodes;
 
         std::cerr << std::hex;
 
@@ -91,159 +98,162 @@ namespace Kelly
             //  << " bytecode " << std::hex << (int)(*current) << '\n';
             //::Sleep(500);
 
-            switch(*current)
+            switch(*state.current)
             {
                 case Noop: break;
 
                 case Jump:
                 {
                     uint16_t offset =
-                        *reinterpret_cast<const uint16_t*>(current + 1);
+                        *reinterpret_cast<const uint16_t*>(state.current + 1);
 
-                    current = bytecodes + offset - 1;
+                    state.current = bytecodes + offset - 1;
 
                     break;
                 }
 
                 case Pop8:
-                    stackPointer -= 1;
+                    state.stackPointer -= 1;
                     break;
 
                 case Pop16:
-                    stackPointer -= 2;
+                    state.stackPointer -= 2;
                     break;
 
                 case Pop32:
-                    stackPointer -= 4;
+                    state.stackPointer -= 4;
                     break;
 
                 case Pop64:
-                    stackPointer -= 8;
+                    state.stackPointer -= 8;
                     break;
 
                 case PushLiteral8:
-                    PushLiteral<uint8_t>(current, stackPointer);
+                    PushLiteral<uint8_t>(state);
                     break;
 
                 case PushLiteral16:
-                    PushLiteral<uint16_t>(current, stackPointer);
+                    PushLiteral<uint16_t>(state);
                     break;
 
                 case PushLiteral32:
-                    PushLiteral<uint32_t>(current, stackPointer);
+                    PushLiteral<uint32_t>(state);
                     break;
 
                 case PushLiteral64:
-                    PushLiteral<uint64_t>(current, stackPointer);
+                    PushLiteral<uint64_t>(state);
                     break;
 
                 case PushLocal8:
-                    PushLocal<uint8_t>(current, stackPointer, framePointer);
+                    PushLocal<uint8_t>(state);
                     break;
 
                 case PushLocal16:
-                    PushLocal<uint16_t>(current, stackPointer, framePointer);
+                    PushLocal<uint16_t>(state);
                     break;
 
                 case PushLocal32:
-                    PushLocal<uint32_t>(current, stackPointer, framePointer);
+                    PushLocal<uint32_t>(state);
                     break;
 
                 case PushLocal64:
-                    PushLocal<uint64_t>(current, stackPointer, framePointer);
+                    PushLocal<uint64_t>(state);
                     break;
 
                 case PushCopy8:
-                    PushCopy<uint8_t>(stackPointer);
+                    PushCopy<uint8_t>(state);
                     break;
 
                 case PushCopy16:
-                    PushCopy<uint16_t>(stackPointer);
+                    PushCopy<uint16_t>(state);
                     break;
 
                 case PushCopy32:
-                    PushCopy<uint32_t>(stackPointer);
+                    PushCopy<uint32_t>(state);
                     break;
 
                 case PushCopy64:
-                    PushCopy<uint64_t>(stackPointer);
+                    PushCopy<uint64_t>(state);
                     break;
 
                 case StoreLocal8:
-                    StoreLocal<uint8_t>(current, stackPointer, framePointer);
+                    StoreLocal<uint8_t>(state);
                     break;
 
                 case StoreLocal16:
-                    StoreLocal<uint16_t>(current, stackPointer, framePointer);
+                    StoreLocal<uint16_t>(state);
                     break;
 
                 case StoreLocal32:
-                    StoreLocal<uint32_t>(current, stackPointer, framePointer);
+                    StoreLocal<uint32_t>(state);
                     break;
 
                 case StoreLocal64:
-                    StoreLocal<uint64_t>(current, stackPointer, framePointer);
+                    StoreLocal<uint64_t>(state);
                     break;
 
                 case AddS8:
-                    Add<int8_t>(stackPointer);
+                    Add<int8_t>(state);
                     break;
 
                 case AddS16:
-                    Add<int16_t>(stackPointer);
+                    Add<int16_t>(state);
                     break;
 
                 case AddS32:
-                    Add<int32_t>(stackPointer);
+                    Add<int32_t>(state);
                     break;
 
                 case AddS64:
-                    Add<int64_t>(stackPointer);
+                    Add<int64_t>(state);
                     break;
 
                 case JumpIfGE32:
                 {
                     uint16_t offset =
-                        *reinterpret_cast<const uint16_t*>(current + 1);
+                        *reinterpret_cast<const uint16_t*>(state.current + 1);
 
-                    auto b = Pop<uint32_t>(stackPointer);
-                    auto a = Pop<uint32_t>(stackPointer);
+                    auto b = Pop<uint32_t>(state);
+                    auto a = Pop<uint32_t>(state);
 
                     //std::cerr << "a " << a << " b " << b << '\n';
 
                     if (a >= b)
-                        current = bytecodes + offset - 1;
+                        state.current = bytecodes + offset - 1;
                     else
-                        current += 2;
+                        state.current += 2;
 
                     break;
                 }
 
                 case OutS8:
-                    std::cout << Pop<int8_t>(stackPointer) << std::endl;
+                    std::cout << Pop<int8_t>(state) << std::endl;
                     break;
 
                 case OutS16:
-                    std::cout << Pop<int16_t>(stackPointer) << std::endl;
+                    std::cout << Pop<int16_t>(state) << std::endl;
                     break;
 
                 case OutS32:
-                    std::cout << Pop<int32_t>(stackPointer) << std::endl;
+                    std::cout << Pop<int32_t>(state) << std::endl;
                     break;
 
                 case OutS64:
-                    std::cout << Pop<int64_t>(stackPointer) << std::endl;
+                    std::cout << Pop<int64_t>(state) << std::endl;
                     break;
 
                 case Exit:
                     return;
 
                 default:
-                    std::cerr << "unrecognized byte code: " << (int)(*current) << '\n';
+                    std::cerr
+                        << "unrecognized byte code: "
+                        << (int)(*state.current)
+                        << '\n';
                     return;
             }
 
-            ++current;
+            ++state.current;
         }
     }
 }
