@@ -16,6 +16,14 @@ namespace Kelly
     };
 
     template<typename T>
+    T Read(State& state)
+    {
+        T result = *reinterpret_cast<const T*>(state.current);
+        state.current += sizeof(T);
+        return result;
+    }
+
+    template<typename T>
     void Push(State& state, const void* source)
     {
         *reinterpret_cast<T*>(state.stackPointer) =
@@ -40,34 +48,20 @@ namespace Kelly
     template<typename T>
     void PushLocal(State& state)
     {
-        uint16_t offset =
-            *reinterpret_cast<const uint16_t*>(state.current);
-
-        state.current += 2;
-
-        *reinterpret_cast<T*>(state.stackPointer) =
-            *reinterpret_cast<const T*>(state.framePointer + offset);
-
-        state.stackPointer += sizeof(T);
+        auto offset = Read<uint16_t>(state);
+        Push<T>(state, state.framePointer + offset);
     }
 
     template<typename T>
     void PushCopy(State& state)
     {
-        *reinterpret_cast<T*>(state.stackPointer) =
-            *reinterpret_cast<T*>(state.stackPointer - sizeof(T));
-
-        state.stackPointer += sizeof(T);
+        Push<T>(state, state.stackPointer - sizeof(T));
     }
 
     template<typename T>
     void StoreLocal(State& state)
     {
-        uint16_t offset =
-            *reinterpret_cast<const uint16_t*>(state.current);
-
-        state.current += 2;
-
+        uint16_t offset = Read<uint16_t>(state);
         *reinterpret_cast<T*>(state.framePointer + offset) = Pop<T>(state);
     }
 
@@ -80,9 +74,20 @@ namespace Kelly
         Push<T>(state, &c);
     }
 
+    template<typename T>
+    void Compare(State& state)
+    {
+        auto b = Pop<T>(state);
+        auto a = Pop<T>(state);
+
+        int8_t c = (a > b) - (a < b);
+
+        Push<int8_t>(state, &c);
+    }
+
     void Run(const uint8_t* bytecodes)
     {
-        std::vector<uint8_t> memStack(1024);
+        std::vector<uint8_t> memStack(1 << 20, 0);
         State state;
         state.stackPointer = memStack.data();
         state.framePointer = state.stackPointer;
@@ -144,18 +149,13 @@ namespace Kelly
 
                 case JumpIfGE32:
                 {
-                    uint16_t offset =
-                        *reinterpret_cast<const uint16_t*>(state.current);
+                    auto offset = Read<uint16_t>(state);
 
                     auto b = Pop<uint32_t>(state);
                     auto a = Pop<uint32_t>(state);
 
-                    //std::cerr << "a " << a << " b " << b << '\n';
-
                     if (a >= b)
                         state.current = bytecodes + offset;
-                    else
-                        state.current += 2;
 
                     break;
                 }

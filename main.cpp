@@ -92,6 +92,9 @@ int main(int argc, char** argv)
 {
     using namespace Bytecodes;
 
+    uint32_t n = 0x80000000;
+    cout << n << ", " << -n << endl;
+
     int total = 0;
     for (int i = 0; i < 16; ++i) total += i;
     cout << "Answer: " << total << endl;
