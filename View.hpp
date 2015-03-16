@@ -14,6 +14,12 @@ namespace Kelly
     };
 
     template<typename T>
+    constexpr View<const T> ReadOnly(const View<T>& view)
+    {
+        return { view.first, view.length };
+    }
+
+    template<typename T>
     bool operator==(const View<T>& a, const View<T>& b)
     {
         return
@@ -41,13 +47,13 @@ namespace Kelly
     }
 
     template<typename T>
-    constexpr const T* begin(const View<T>& view)
+    constexpr T* begin(const View<T>& view)
     {
         return view.first;
     }
 
     template<typename T>
-    constexpr const T* end(const View<T>& view)
+    constexpr T* end(const View<T>& view)
     {
         return view.first + view.length;
     }

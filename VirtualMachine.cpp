@@ -33,7 +33,7 @@ namespace Kelly
     template<typename T>
     void PushLiteral(State& state)
     {
-        Push<T>(state, state.current + 1);
+        Push<T>(state, state.current);
         state.current += sizeof(T);
     }
 
@@ -41,7 +41,7 @@ namespace Kelly
     void PushLocal(State& state)
     {
         uint16_t offset =
-            *reinterpret_cast<const uint16_t*>(state.current + 1);
+            *reinterpret_cast<const uint16_t*>(state.current);
 
         state.current += 2;
 
@@ -64,7 +64,7 @@ namespace Kelly
     void StoreLocal(State& state)
     {
         uint16_t offset =
-            *reinterpret_cast<const uint16_t*>(state.current + 1);
+            *reinterpret_cast<const uint16_t*>(state.current);
 
         state.current += 2;
 
@@ -98,14 +98,14 @@ namespace Kelly
             //  << " bytecode " << std::hex << (int)(*current) << '\n';
             //::Sleep(500);
 
-            switch(*state.current)
+            switch(*state.current++)
             {
                 case Noop: break;
 
                 case Jump:
                 {
                     uint16_t offset =
-                        *reinterpret_cast<const uint16_t*>(state.current + 1);
+                        *reinterpret_cast<const uint16_t*>(state.current);
 
                     state.current = bytecodes + offset - 1;
 
@@ -132,10 +132,10 @@ namespace Kelly
                 case PushCopy32: PushCopy<uint32_t>(state); break;
                 case PushCopy64: PushCopy<uint64_t>(state); break;
 
-                case StoreLocal8: StoreLocal<uint8_t>(state); break;
-                case StoreLocal16: StoreLocal<uint16_t>(state); break;
-                case StoreLocal32: StoreLocal<uint32_t>(state); break;
-                case StoreLocal64: StoreLocal<uint64_t>(state); break;
+                case PopToLocal8: StoreLocal<uint8_t>(state); break;
+                case PopToLocal16: StoreLocal<uint16_t>(state); break;
+                case PopToLocal32: StoreLocal<uint32_t>(state); break;
+                case PopToLocal64: StoreLocal<uint64_t>(state); break;
 
                 case AddS8: Add<int8_t>(state); break;
                 case AddS16: Add<int16_t>(state); break;
@@ -145,7 +145,7 @@ namespace Kelly
                 case JumpIfGE32:
                 {
                     uint16_t offset =
-                        *reinterpret_cast<const uint16_t*>(state.current + 1);
+                        *reinterpret_cast<const uint16_t*>(state.current);
 
                     auto b = Pop<uint32_t>(state);
                     auto a = Pop<uint32_t>(state);
@@ -153,7 +153,7 @@ namespace Kelly
                     //std::cerr << "a " << a << " b " << b << '\n';
 
                     if (a >= b)
-                        state.current = bytecodes + offset - 1;
+                        state.current = bytecodes + offset;
                     else
                         state.current += 2;
 
@@ -186,8 +186,6 @@ namespace Kelly
                         << '\n';
                     return;
             }
-
-            ++state.current;
         }
     }
 }

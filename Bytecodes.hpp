@@ -31,10 +31,10 @@ namespace Kelly
         const uint8_t PushCopy32 = 0x2a;
         const uint8_t PushCopy64 = 0x2b;
 
-        const uint8_t StoreLocal8 = 0x2c;
-        const uint8_t StoreLocal16 = 0x2d;
-        const uint8_t StoreLocal32 = 0x2e;
-        const uint8_t StoreLocal64 = 0x2f;
+        const uint8_t PopToLocal8 = 0x2c;
+        const uint8_t PopToLocal16 = 0x2d;
+        const uint8_t PopToLocal32 = 0x2e;
+        const uint8_t PopToLocal64 = 0x2f;
 
         const uint8_t AddS8 = 0x30;
         const uint8_t AddS16 = 0x31;

@@ -105,11 +105,11 @@ int main(int argc, char** argv)
         PushLocal32, 0x00, 0x00, // load 'total'
         PushLocal32, 0x04, 0x00, // load 'i'
         AddS32,
-        StoreLocal32, 0x00, 0x00, // store 'total'
+        PopToLocal32, 0x00, 0x00, // store 'total'
         PushLocal32, 0x04, 0x00, // load 'i'
         PushLiteral32, 0x01, 0x00, 0x00, 0x00,
         AddS32,
-        StoreLocal32, 0x04, 0x00, // store 'i'
+        PopToLocal32, 0x04, 0x00, // store 'i'
         Jump, 10, 0x00,
         PushLocal32, 0x00, 0x00, // load 'total'
         OutS32,
