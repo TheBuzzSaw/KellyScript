@@ -14,12 +14,12 @@ namespace Kelly
         char chars[4];
     };
 
-    constexpr bool operator==(const Utf8CodePoint& a, const Utf8CodePoint& b)
+    constexpr bool operator==(Utf8CodePoint a, Utf8CodePoint b)
     {
         return a.value == b.value;
     }
 
-    constexpr bool operator!=(const Utf8CodePoint& a, const Utf8CodePoint& b)
+    constexpr bool operator!=(Utf8CodePoint a, Utf8CodePoint b)
     {
         return a.value != b.value;
     }
@@ -35,9 +35,9 @@ namespace Kelly
         return { reinterpret_cast<const char*>(codePoint.chars), 4 };
     }
 
-    const Utf8CodePoint GetUtf8CodePoint(const char* text);
-    size_t GetLength(const Utf8CodePoint& codePoint);
-    int32_t GetUtf32CodePoint(const Utf8CodePoint& codePoint);
+    Utf8CodePoint GetUtf8CodePoint(const char* text);
+    size_t GetLength(Utf8CodePoint codePoint);
+    int32_t GetUtf32CodePoint(Utf8CodePoint codePoint);
 }
 
 #endif

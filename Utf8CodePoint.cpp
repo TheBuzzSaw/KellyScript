@@ -29,7 +29,7 @@ namespace Kelly
         return (n & 0xc0) == 0x80;
     }
 
-    const Utf8CodePoint GetUtf8CodePoint(const char* text)
+    Utf8CodePoint GetUtf8CodePoint(const char* text)
     {
         const uint8_t* bytes = reinterpret_cast<const uint8_t*>(text);
         Utf8CodePoint result = {};
@@ -55,7 +55,7 @@ namespace Kelly
         return result;
     }
 
-    size_t GetLength(const Utf8CodePoint& codePoint)
+    size_t GetLength(Utf8CodePoint codePoint)
     {
         size_t result = 0;
 
@@ -64,7 +64,7 @@ namespace Kelly
         return result;
     }
 
-    int32_t GetUtf32CodePoint(const Utf8CodePoint& codePoint)
+    int32_t GetUtf32CodePoint(Utf8CodePoint codePoint)
     {
         auto length = GetLength(codePoint);
 

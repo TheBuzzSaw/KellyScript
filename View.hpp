@@ -11,13 +11,9 @@ namespace Kelly
     {
         T* first;
         size_t length;
-    };
 
-    template<typename T>
-    constexpr View<const T> ReadOnly(const View<T>& view)
-    {
-        return { view.first, view.length };
-    }
+        constexpr operator View<const T>() const { return { first, length }; }
+    };
 
     template<typename T>
     bool operator==(const View<T>& a, const View<T>& b)
