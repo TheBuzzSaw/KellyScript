@@ -1,6 +1,6 @@
 #include "VirtualMachine.hpp"
 
-#include <windows.h>
+//#include <windows.h>
 #include <iostream>
 #include <iomanip>
 #include <vector>

@@ -1,4 +1,5 @@
 #include "Token.hpp"
+#include <algorithm>
 #include <cstdio>
 
 namespace Kelly
@@ -35,24 +36,9 @@ namespace Kelly
 
     bool IsOperator(char input)
     {
-        bool result = false;
-
-        switch (input)
-        {
-            case '+':
-            case '-':
-            case '*':
-            case '/':
-            case '=':
-            case '.':
-                result = true;
-                break;
-
-            default:
-                break;
-        }
-
-        return result;
+        const char Symbols[] = "!#$%&()*+,-./:;<=>?@[\\]^_`{|}~";
+        return std::binary_search(
+            Symbols, Symbols + sizeof(Symbols) - 1, input);
     }
 
     void ParseIdentifier(Token& token)

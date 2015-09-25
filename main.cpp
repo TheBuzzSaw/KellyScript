@@ -3,6 +3,7 @@
 #include "Utf8CodePoint.hpp"
 #include "Tools.hpp"
 #include "VirtualMachine.hpp"
+#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -88,7 +89,7 @@ void TestUtf8Content()
     fout.close();
 }
 
-int main(int argc, char** argv)
+void TestBytecodes()
 {
     using namespace Bytecodes;
 
@@ -122,11 +123,25 @@ int main(int argc, char** argv)
         };
 
     Run(bytecodes);
+}
+
+int main(int argc, char** argv)
+{
+    char symbols[] = "`-=[]\\;,./~!@#$%^&*()_+{}|:<>?";
+    sort(symbols, symbols + sizeof(symbols) - 1);
+    cout << symbols << endl;
+
+    ofstream fout("symbols.txt", ofstream::binary);
+    fout << symbols;
+    fout.close();
+
+    int x = 1;
+    x += 2;
 
     if (argc > 1)
     {
-        //View<char*> arguments = { argv + 1, size_t(argc - 1) };
-        //SyntaxTree tree(arguments);
+        View<char*> arguments = { argv + 1, size_t(argc - 1) };
+        SyntaxTree tree(arguments);
     }
     else
     {
