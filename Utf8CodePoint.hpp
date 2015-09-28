@@ -46,6 +46,7 @@ namespace Kelly
     }
 
     Utf8CodePoint GetUtf8CodePoint(const char* text);
+    Utf8ParseResult ParseUtf8CodePoint(const char* text);
     size_t GetLength(Utf8CodePoint codePoint);
     int32_t GetUtf32CodePoint(Utf8CodePoint codePoint);
 }

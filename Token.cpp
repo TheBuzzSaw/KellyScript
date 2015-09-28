@@ -1,49 +1,52 @@
 #include "Token.hpp"
+#include "Utf8CodePoint.hpp"
 #include <algorithm>
 #include <cstdio>
 
 namespace Kelly
 {
-    constexpr bool IsBetween(char input, char first, char last)
+    template<typename T> constexpr bool InRange(T value, T first, T last)
     {
-        return first <= input && input <= last;
+        return first <= value && value <= last;
     }
 
-    constexpr bool IsLowercase(char input)
+    constexpr bool IsLowercase(int input)
     {
-        return IsBetween(input, 'a', 'z');
+        return InRange<int>(input, 'a', 'z');
     }
 
-    constexpr bool IsUppercase(char input)
+    constexpr bool IsUppercase(int input)
     {
-        return IsBetween(input, 'A', 'Z');
+        return InRange<int>(input, 'A', 'Z');
     }
 
-    constexpr bool IsLetter(char input)
+    constexpr bool IsLetter(int input)
     {
         return IsLowercase(input) || IsUppercase(input);
     }
 
-    constexpr bool IsDigit(char input)
+    constexpr bool IsDigit(int input)
     {
-        return IsBetween(input, '0', '9');
+        return InRange<int>(input, '0', '9');
     }
 
-    constexpr bool IsIdentifierSafe(char input)
+    constexpr bool IsIdentifierSafe(int input)
     {
         return IsLetter(input) || IsDigit(input) || input == '_';
     }
 
-    bool IsOperator(char input)
+    bool IsSymbol(int input)
     {
         const char Symbols[] = "!#$%&()*+,-./:;<=>?@[\\]^_`{|}~";
-        return std::binary_search(
-            Symbols, Symbols + sizeof(Symbols) - 1, input);
+        const auto LastSymbol = Symbols + sizeof(Symbols) - 1;
+
+        return InRange<int>(input, *Symbols, *LastSymbol) &&
+            std::binary_search(Symbols, LastSymbol, input);
     }
 
     void ParseIdentifier(Token& token)
     {
-        token.type = Token::Types::Identifier;
+        token.type = Token::Type::Identifier;
 
         while (IsIdentifierSafe(token.source.first[++token.source.length]))
             ;
@@ -102,12 +105,36 @@ namespace Kelly
             ;
     }
 
-    Token FromSource(const char* buffer)
+    std::vector<Token> GetTokens(const char* buffer)
     {
-        Token result;
-        result.type = Token::Types::None;
-        result.source.first = buffer;
-        result.source.length = 0;
+        std::vector<Token> result;
+
+        int row = 1;
+        int column = 0;
+        int offset = 0;
+
+        for (auto i = buffer; *i; ++i)
+        {
+            Token token;
+            token.type = Token::Type::None;
+            token.offset = offset;
+            token.row = row;
+            token.column = ++column;
+
+            Utf8ParseResult parsedCodePoint = ParseUtf8CodePoint(i);
+
+            if (parsedCodePoint.parseResult < 0)
+            {
+                token.type = Token::Type::InvalidCodePoint;
+                result.push_back(token);
+                return result;
+            }
+
+            offset += parsedCodePoint.parseResult;
+            int codePoint = GetUtf32CodePoint(parsedCodePoint.codePoint);
+
+
+        }
 
         if (result.source.first)
         {

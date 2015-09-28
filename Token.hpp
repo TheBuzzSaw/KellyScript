@@ -2,33 +2,33 @@
 #define TOKEN_HPP
 
 #include <iostream>
-#include "View.hpp"
+#include <vector>
 
 namespace Kelly
 {
     struct Token
     {
-        enum class Types
+        enum class Type : int
         {
             None,
-            Space,
             Identifier,
             StringLiteral,
-            NumberLiteral,
-            Operator
+            NumericLiteral,
+            SymbolString,
+            InvalidCodePoint
         };
 
-        Types type = Types::None;
-        View<const char> source = { nullptr, 0 };
-        const char* file = nullptr;
-        int row = 0;
-        int column = 0;
+        Type type;
+        int offset;
+        int length;
+        int row;
+        int column;
     };
 
-    Token FromSource(const char* buffer);
+    std::vector<Token> GetTokens(const char* buffer);
 
     std::ostream& operator<<(std::ostream& stream, const Token& token);
-    std::ostream& operator<<(std::ostream& stream, Token::Types type);
+    std::ostream& operator<<(std::ostream& stream, Token::Type type);
 }
 
 #endif
