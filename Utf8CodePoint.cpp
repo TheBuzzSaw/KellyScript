@@ -12,13 +12,9 @@ namespace Kelly
             uint8_t mask = 1 << (7 - i);
 
             if (n & mask)
-            {
                 ++result;
-            }
             else
-            {
                 break;
-            }
         }
 
         return result;
@@ -27,6 +23,49 @@ namespace Kelly
     static constexpr bool IsContinuationByte(uint8_t n)
     {
         return (n & 0xc0) == 0x80;
+    }
+
+    Utf8ParseResult ParseUtf8CodePoint(const char* text)
+    {
+        auto bytes = (const uint8_t*)text;
+        Utf8ParseResult result{};
+
+        if (!text)
+        {
+            result.parseResult = Utf8ParseResult::NullPointer;
+            return result;
+        }
+
+        auto bitCount = CountLeftBits(bytes[0]);
+
+        if (bitCount == 0)
+        {
+            result.codePoint.bytes[0] = bytes[0];
+            result.parseResult = 1;
+        }
+        else if (2 <= bitCount && bitCount <= 4)
+        {
+            for (int i = 1; i < bitCount; ++i)
+            {
+                result.codePoint.bytes[i] = bytes[i];
+
+                if (!IsContinuationByte(bytes[i]))
+                {
+                    result.parseResult =
+                        Utf8ParseResult::MissingContinuationByte;
+
+                    return result;
+                }
+            }
+
+            result.parseResult = bitCount;
+        }
+        else
+        {
+            result.parseResult = Utf8ParseResult::InvalidByteCount;
+        }
+
+        return result;
     }
 
     Utf8CodePoint GetUtf8CodePoint(const char* text)

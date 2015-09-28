@@ -127,6 +127,9 @@ void TestBytecodes()
 
 int main(int argc, char** argv)
 {
+    uint8_t aa, bb;
+    cout << sizeof(aa | bb) << endl;
+
     char symbols[] = "`-=[]\\;,./~!@#$%^&*()_+{}|:<>?";
     sort(symbols, symbols + sizeof(symbols) - 1);
     cout << symbols << endl;

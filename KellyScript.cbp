@@ -42,6 +42,8 @@
 		<Unit filename="Identifier.hpp" />
 		<Unit filename="Instruction.cpp" />
 		<Unit filename="Instruction.hpp" />
+		<Unit filename="Region.cpp" />
+		<Unit filename="Region.hpp" />
 		<Unit filename="State.cpp" />
 		<Unit filename="State.hpp" />
 		<Unit filename="SyntaxTree.cpp" />

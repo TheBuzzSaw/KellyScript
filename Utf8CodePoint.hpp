@@ -14,6 +14,16 @@ namespace Kelly
         char chars[4];
     };
 
+    struct Utf8ParseResult
+    {
+        static constexpr int InvalidByteCount = -1;
+        static constexpr int MissingContinuationByte = -2;
+        static constexpr int NullPointer = -3;
+
+        Utf8CodePoint codePoint;
+        int parseResult;
+    };
+
     constexpr bool operator==(Utf8CodePoint a, Utf8CodePoint b)
     {
         return a.value == b.value;

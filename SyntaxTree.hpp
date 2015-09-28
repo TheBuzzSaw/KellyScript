@@ -14,15 +14,14 @@ namespace Kelly
         public:
             SyntaxTree(View<char*> arguments);
             SyntaxTree(SyntaxTree&& other);
+            SyntaxTree(const SyntaxTree&) = delete;
             ~SyntaxTree();
 
             SyntaxTree& operator=(SyntaxTree&& other);
+            SyntaxTree& operator=(const SyntaxTree&) = delete;
 
         protected:
         private:
-            SyntaxTree(const SyntaxTree&) = delete;
-            SyntaxTree& operator=(const SyntaxTree&) = delete;
-
             void Add(TypeDefinition td);
             void ReadFile(const char* file);
 

@@ -6,8 +6,7 @@
 
 namespace Kelly
 {
-    template<typename T>
-    struct View
+    template<typename T> struct View
     {
         T* first;
         size_t length;

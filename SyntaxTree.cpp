@@ -9,19 +9,19 @@ namespace Kelly
     {
         // Process all flags first.
 
-        for (const auto i : arguments)
+        for (auto argument : arguments)
         {
-            if (i[0] == '-') cout << "flag " << i << '\n';
+            if (argument[0] == '-') cout << "flag " << argument << '\n';
         }
 
         // Now compile files.
 
-        for (const auto i : arguments)
+        for (auto argument : arguments)
         {
-            if (i[0] != '-')
+            if (argument[0] != '-')
             {
-                cout << "file " << i << '\n';
-                ReadFile(i);
+                cout << "file " << argument << '\n';
+                ReadFile(argument);
             }
         }
 
