@@ -138,12 +138,14 @@ int main(int argc, char** argv)
     fout << symbols;
     fout.close();
 
-    if (argc > 1)
+    for (int i = 1; i < argc; ++i)
     {
         auto content = FileToString(argv[1]);
         cout << "file content:\n" << content << endl;
 
         auto tokens = GetTokens(content.data());
+
+        cout << "parsed " << tokens.size() << " tokens\n";
 
         for (auto token : tokens)
         {
@@ -158,12 +160,14 @@ int main(int argc, char** argv)
                 default: break;
             }
 
-            cout << tokenTypeName << " -- ";
-            cout.write(content.data() + token.start, token.length);
-            cout << '\n';
+            View<const char> v = {content.data() + token.start, token.length};
+
+            cout << tokenTypeName << " @ row " << token.row << " col "
+                << token.column << " " << v << '\n';
         }
     }
-    else
+
+    if (argc < 2)
     {
         cout << "usage: " << argv[0] << " <path>" << endl;
     }

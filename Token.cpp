@@ -56,18 +56,16 @@ namespace Kelly
         int32_t row = 1;
         int32_t column = 1;
 
-        for (int32_t i = 0; source[i]; ++i)
+        for (int32_t i = 0; source[i]; ++i, ++column)
         {
             int c = source[i];
 
             if (c == '\n')
             {
                 ++row;
-                column = 1;
+                column = 0;
                 continue;
             }
-
-            ++column;
 
             if (c == ' ' || c == '\r') continue;
 

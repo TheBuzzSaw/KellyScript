@@ -3,40 +3,17 @@
 
 #include <iostream>
 #include <cstring>
+#include <cstddef>
 
 namespace Kelly
 {
     template<typename T> struct View
     {
         T* first;
-        size_t length;
+        ptrdiff_t length;
 
         constexpr operator View<const T>() const { return { first, length }; }
     };
-
-    template<typename T> bool operator==(View<T> a, View<T> b)
-    {
-        return
-            a.length == b.length &&
-            (a.first == b.first ||
-            !memcmp(a.first, b.first, a.length * sizeof(T)));
-    }
-
-    template<typename T> bool operator<(View<T> a, View<T> b)
-    {
-        return
-            a.length < b.length ||
-            (a.length == b.length &&
-            memcmp(a.first, b.first, a.length * sizeof(T)) < 0);
-    }
-
-    template<typename T> bool operator>(View<T> a, View<T> b)
-    {
-        return
-            a.length > b.length ||
-            (a.length == b.length &&
-            memcmp(a.first, b.first, a.length * sizeof(T)) > 0);
-    }
 
     template<typename T> constexpr T* begin(View<T> view)
     {
@@ -48,12 +25,10 @@ namespace Kelly
         return view.first + view.length;
     }
 
-    template<typename T> std::ostream& operator<<(
-        std::ostream& stream, View<T> view)
+    inline std::ostream& operator<<(
+        std::ostream& stream, View<const char> view)
     {
-        for (auto i : view) stream << i;
-
-        return stream;
+        return stream.write(view.first, view.length);
     }
 }
 
