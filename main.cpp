@@ -138,13 +138,30 @@ int main(int argc, char** argv)
     fout << symbols;
     fout.close();
 
-    int x = 1;
-    x += 2;
-
     if (argc > 1)
     {
-        View<char*> arguments = { argv + 1, size_t(argc - 1) };
-        SyntaxTree tree(arguments);
+        auto content = FileToString(argv[1]);
+        cout << "file content:\n" << content << endl;
+
+        auto tokens = GetTokens(content.data());
+
+        for (auto token : tokens)
+        {
+            auto tokenTypeName = "unknown";
+
+            switch(token.type)
+            {
+                case Token::Identifier: tokenTypeName = "identifier"; break;
+                case Token::Symbol: tokenTypeName = "symbol"; break;
+                case Token::NumericLiteral: tokenTypeName = "number"; break;
+                case Token::StringLiteral: tokenTypeName = "string"; break;
+                default: break;
+            }
+
+            cout << tokenTypeName << " -- ";
+            cout.write(content.data() + token.start, token.length);
+            cout << '\n';
+        }
     }
     else
     {

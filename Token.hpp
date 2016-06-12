@@ -1,34 +1,28 @@
 #ifndef TOKEN_HPP
 #define TOKEN_HPP
 
-#include <iostream>
 #include "View.hpp"
+#include <iostream>
+#include <vector>
+#include <cstdint>
 
 namespace Kelly
 {
     struct Token
     {
-        enum class Types
-        {
-            None,
-            Space,
-            Identifier,
-            StringLiteral,
-            NumberLiteral,
-            Operator
-        };
+        int32_t start;
+        int32_t length;
+        int32_t row;
+        int32_t column;
+        int16_t type;
 
-        Types type = Types::None;
-        View<const char> source = { nullptr, 0 };
-        const char* file = nullptr;
-        int row = 0;
-        int column = 0;
+        static constexpr int16_t Identifier = 1;
+        static constexpr int16_t Symbol = 2;
+        static constexpr int16_t NumericLiteral = 3;
+        static constexpr int16_t StringLiteral = 4;
     };
 
-    Token FromSource(const char* buffer);
-
-    std::ostream& operator<<(std::ostream& stream, const Token& token);
-    std::ostream& operator<<(std::ostream& stream, Token::Types type);
+    std::vector<Token> GetTokens(const char* source);
 }
 
 #endif

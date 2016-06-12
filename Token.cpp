@@ -4,161 +4,147 @@
 
 namespace Kelly
 {
-    constexpr bool IsBetween(char input, char first, char last)
+    static const char Symbols[] = "!#$%&()*+,-./:;<=>?@[\\]^_`{|}~";
+
+    template<typename T> constexpr bool IsBetween(T n, T first, T last)
     {
-        return first <= input && input <= last;
+        return first <= n && n <= last;
     }
 
-    constexpr bool IsLowercase(char input)
+    template<typename T> constexpr bool IsLowercase(T n)
     {
-        return IsBetween(input, 'a', 'z');
+        return IsBetween(n, T('a'), T('z'));
     }
 
-    constexpr bool IsUppercase(char input)
+    template<typename T> constexpr bool IsUppercase(T n)
     {
-        return IsBetween(input, 'A', 'Z');
+        return IsBetween(n, T('A'), T('Z'));
     }
 
-    constexpr bool IsLetter(char input)
+    template<typename T> constexpr bool IsLetter(T n)
     {
-        return IsLowercase(input) || IsUppercase(input);
+        return IsLowercase(n) || IsUppercase(n);
     }
 
-    constexpr bool IsDigit(char input)
+    template<typename T> constexpr bool IsDigit(T n)
     {
-        return IsBetween(input, '0', '9');
+        return IsBetween(n, T('0'), T('9'));
     }
 
-    constexpr bool IsIdentifierSafe(char input)
+    template<typename T> constexpr bool IsIdentifierSafe(T n)
     {
-        return IsLetter(input) || IsDigit(input) || input == '_';
+        return n == '_' ||
+            IsLetter(n) ||
+            IsDigit(n);
     }
 
-    bool IsOperator(char input)
+    template<typename T> constexpr bool IsStringLiteralSafe(T n)
     {
-        const char Symbols[] = "!#$%&()*+,-./:;<=>?@[\\]^_`{|}~";
+        return n && n != '"' && n != '\n';
+    }
+
+    bool IsSymbol(char input)
+    {
         return std::binary_search(
             Symbols, Symbols + sizeof(Symbols) - 1, input);
     }
 
-    void ParseIdentifier(Token& token)
+    std::vector<Token> GetTokens(const char* source)
     {
-        token.type = Token::Types::Identifier;
+        std::vector<Token> tokens;
 
-        while (IsIdentifierSafe(token.source.first[++token.source.length]))
-            ;
-    }
+        int32_t row = 1;
+        int32_t column = 1;
 
-    void ParseNumberLiteral(Token& token)
-    {
-        token.type = Token::Types::NumberLiteral;
-
-        bool consumedDecimal = false;
-
-        while (true)
+        for (int32_t i = 0; source[i]; ++i)
         {
-            char c = token.source.first[++token.source.length];
+            int c = source[i];
 
-            if (c == '.')
+            if (c == '\n')
             {
-                if (consumedDecimal) break;
-
-                consumedDecimal = true;
+                ++row;
+                column = 1;
+                continue;
             }
-            else if (!IsDigit(c))
-            {
-                break;
-            }
-        }
-    }
 
-    void ParseStringLiteral(Token& token)
-    {
-        token.type = Token::Types::StringLiteral;
+            ++column;
 
-        while (true)
-        {
-            char c = token.source.first[++token.source.length];
-
-            if (c == '"')
-            {
-                ++token.source.length;
-                break;
-            }
-            else if (!c || c == '\n' || c == '\r')
-            {
-                token.type = Token::Types::None;
-                token.source.length = 0;
-                break;
-            }
-        }
-    }
-
-    void ParseOperator(Token& token)
-    {
-        token.type = Token::Types::Operator;
-
-        while (IsOperator(token.source.first[++token.source.length]))
-            ;
-    }
-
-    Token FromSource(const char* buffer)
-    {
-        Token result;
-        result.type = Token::Types::None;
-        result.source.first = buffer;
-        result.source.length = 0;
-
-        if (result.source.first)
-        {
-            const char*& i = result.source.first;
-            while (*i && (*i == ' ' || *i == '\n' || *i == '\r')) ++i;
-
-            char c = *i;
+            if (c == ' ' || c == '\r') continue;
 
             if (IsDigit(c))
             {
-                ParseNumberLiteral(result);
-            }
-            else if (c == '"')
-            {
-                ParseStringLiteral(result);
+                Token token;
+                token.start = i;
+                token.length = 1;
+                token.row = row;
+                token.column = column;
+                token.type = Token::NumericLiteral;
+
+                while (IsDigit(source[i + 1]))
+                {
+                    ++i;
+                    ++column;
+                    ++token.length;
+                }
+
+                tokens.push_back(token);
             }
             else if (c == '_' || IsLetter(c))
             {
-                ParseIdentifier(result);
+                Token token;
+                token.start = i;
+                token.length = 1;
+                token.row = row;
+                token.column = column;
+                token.type = Token::Identifier;
+
+                while (IsIdentifierSafe(source[i + 1]))
+                {
+                    ++i;
+                    ++column;
+                    ++token.length;
+                }
+
+                tokens.push_back(token);
             }
-            else if (IsOperator(c))
+            else if (c == '"')
             {
-                ParseOperator(result);
+                Token token;
+                token.start = i;
+                token.length = 1;
+                token.row = row;
+                token.column = column;
+                token.type = Token::StringLiteral;
+
+                while (IsStringLiteralSafe(source[i + 1]))
+                {
+                    ++i;
+                    ++column;
+                    ++token.length;
+                }
+
+                if (source[i + 1] == '"')
+                {
+                    ++i;
+                    ++column;
+                    ++token.length;
+                }
+
+                tokens.push_back(token);
+            }
+            else if (IsSymbol(c))
+            {
+                Token token;
+                token.start = i;
+                token.length = 1;
+                token.row = row;
+                token.column = column;
+                token.type = Token::Symbol;
+
+                tokens.push_back(token);
             }
         }
 
-        return result;
-    }
-
-    std::ostream& operator<<(std::ostream& stream, Token::Types type)
-    {
-        const char* result = "unknown";
-
-        switch (type)
-        {
-            case Token::Types::None: result = "none"; break;
-            case Token::Types::Space: result = "space"; break;
-            case Token::Types::Identifier: result = "identifier"; break;
-            case Token::Types::StringLiteral: result = "string literal"; break;
-            case Token::Types::NumberLiteral: result = "number literal"; break;
-            case Token::Types::Operator: result = "operator"; break;
-
-            default:
-                break;
-        }
-
-        return stream << result;
-    }
-
-    std::ostream& operator<<(std::ostream& stream, const Token& token)
-    {
-        return stream << token.type << ": " << token.source;
+        return tokens;
     }
 }

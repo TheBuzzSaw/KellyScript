@@ -14,13 +14,13 @@ namespace Kelly
 
             if (fin)
             {
-                std::ostringstream oss{};
+                std::ostringstream oss;
                 oss << fin.rdbuf();
                 result = oss.str();
                 fin.close();
             }
         }
 
-        return std::move(result);
+        return result;
     }
 }
