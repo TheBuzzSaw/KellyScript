@@ -160,7 +160,7 @@ int main(int argc, char** argv)
                 default: break;
             }
 
-            View<const char> v = {content.data() + token.start, token.length};
+            View<const char> v{content.data() + token.start, token.length};
 
             cout << tokenTypeName << " @ row " << token.row << " col "
                 << token.column << " " << v << '\n';

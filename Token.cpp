@@ -69,13 +69,15 @@ namespace Kelly
 
             if (c == ' ' || c == '\r') continue;
 
+            Token token;
+            token.start = i;
+            token.length = 1;
+            token.row = row;
+            token.column = column;
+            token.type = Token::Unknown;
+
             if (IsDigit(c))
             {
-                Token token;
-                token.start = i;
-                token.length = 1;
-                token.row = row;
-                token.column = column;
                 token.type = Token::NumericLiteral;
 
                 while (IsDigit(source[i + 1]))
@@ -84,16 +86,9 @@ namespace Kelly
                     ++column;
                     ++token.length;
                 }
-
-                tokens.push_back(token);
             }
             else if (c == '_' || IsLetter(c))
             {
-                Token token;
-                token.start = i;
-                token.length = 1;
-                token.row = row;
-                token.column = column;
                 token.type = Token::Identifier;
 
                 while (IsIdentifierSafe(source[i + 1]))
@@ -102,16 +97,9 @@ namespace Kelly
                     ++column;
                     ++token.length;
                 }
-
-                tokens.push_back(token);
             }
             else if (c == '"')
             {
-                Token token;
-                token.start = i;
-                token.length = 1;
-                token.row = row;
-                token.column = column;
                 token.type = Token::StringLiteral;
 
                 while (IsStringLiteralSafe(source[i + 1]))
@@ -127,20 +115,20 @@ namespace Kelly
                     ++column;
                     ++token.length;
                 }
-
-                tokens.push_back(token);
             }
             else if (IsSymbol(c))
             {
-                Token token;
-                token.start = i;
-                token.length = 1;
-                token.row = row;
-                token.column = column;
                 token.type = Token::Symbol;
 
-                tokens.push_back(token);
+                while (IsSymbol(source[i + 1]))
+                {
+                    ++i;
+                    ++column;
+                    ++token.length;
+                }
             }
+
+            if (token.type != Token::Unknown) tokens.push_back(token);
         }
 
         return tokens;
