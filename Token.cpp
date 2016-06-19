@@ -52,10 +52,23 @@ namespace Kelly
             Symbols, Symbols + sizeof(Symbols) - 1, input);
     }
 
+    const char* TokenTypeString(int16_t tokenType)
+    {
+        switch(tokenType)
+        {
+            case Token::Identifier: return "identifier";
+            case Token::Symbol: return "symbol";
+            case Token::NumericLiteral: return "number";
+            case Token::StringLiteral: return "string";
+            default: return "unknown";
+        }
+    }
+
     TreeFood ParseFile(const char* path)
     {
         TreeFood result;
 
+        result.path = path;
         result.source = FileToString(path);
 
         int32_t row = 1;

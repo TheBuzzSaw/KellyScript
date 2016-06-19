@@ -24,6 +24,8 @@ namespace Kelly
         static constexpr int16_t StringLiteral = 4;
     };
 
+    const char* TokenTypeString(int16_t tokenType);
+
     template<typename T> struct Value
     {
         int32_t tokenIndex;
@@ -32,6 +34,7 @@ namespace Kelly
 
     struct TreeFood
     {
+        std::string path;
         std::string source;
         std::vector<Token> tokens;
         std::vector<Value<uint64_t>> integers;

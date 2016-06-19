@@ -25,6 +25,16 @@ namespace Kelly
         return view.first + view.length;
     }
 
+    inline bool operator==(View<const char> a, const char* b)
+    {
+        return !strncmp(a.first, b, a.length);
+    }
+
+    inline bool operator!=(View<const char> a, const char* b)
+    {
+        return strncmp(a.first, b, a.length);
+    }
+
     inline std::ostream& operator<<(
         std::ostream& stream, View<const char> view)
     {

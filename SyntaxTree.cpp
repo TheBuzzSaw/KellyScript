@@ -5,58 +5,43 @@ using namespace std;
 
 namespace Kelly
 {
-    SyntaxTree::SyntaxTree(View<char*> arguments)
+    AbstractSyntaxTree Eat(const TreeFood& food)
     {
-        // Process all flags first.
+        AbstractSyntaxTree result;
+        auto source = food.source.data();
 
-        for (auto argument : arguments)
+        for (size_t i = 0; i < food.tokens.size(); ++i)
         {
-            if (argument[0] == '-') cout << "flag " << argument << '\n';
-        }
+            auto token = food.tokens[i];
+            View<const char> v = {source + token.start, token.length};
 
-        // Now compile files.
-
-        for (auto argument : arguments)
-        {
-            if (argument[0] != '-')
+            if (v == "import")
             {
-                cout << "file " << argument << '\n';
-                ReadFile(argument);
+                cout << "found an import!\n";
+            }
+            else if (v == "export")
+            {
+                cout << "found an export!\n";
+
+                token = food.tokens[++i];
+
+                if (token.type != Token::Identifier)
+                {
+                    v = {source + token.start, token.length};
+
+                    cout << food.path << ':' << token.row << ':'
+                        << token.column << ':'
+                        << " expected package identifier; found "
+                        << TokenTypeString(token.type)
+                        << ' ' << v << '\n';
+                }
+            }
+            else
+            {
+                //cout << "error: expected import or export";
             }
         }
 
-        Add(TypeDefinition("Int8", 1));
-        Add(TypeDefinition("Int16", 2));
-        Add(TypeDefinition("Int32", 4));
-        Add(TypeDefinition("Int64", 8));
-    }
-
-    SyntaxTree::SyntaxTree(SyntaxTree&& other)
-        : _typeDefinitions(move(other._typeDefinitions))
-        , _typeDefinitionIndexByName(
-            move(other._typeDefinitionIndexByName))
-    {
-
-    }
-
-    SyntaxTree::~SyntaxTree()
-    {
-    }
-
-    void SyntaxTree::Add(TypeDefinition td)
-    {
-        auto i = _typeDefinitionIndexByName.find(td.Name());
-
-        if (i == _typeDefinitionIndexByName.end())
-        {
-            _typeDefinitionIndexByName[td.Name()] = _typeDefinitions.size();
-            _typeDefinitions.push_back(move(td));
-        }
-    }
-
-    void SyntaxTree::ReadFile(const char* file)
-    {
-        auto content = FileToString(file);
-        cout << "content of " << file << ":\n" << content << endl;
+        return result;
     }
 }

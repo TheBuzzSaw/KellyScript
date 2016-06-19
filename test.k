@@ -1,8 +1,11 @@
+export Company.Validator;
+export 792;
 import Kabe.Collections.Arrays;
 import Kabe
     .    Stuff;
 import Kabe.Yup.Even.Moar;
-export Company;
+
+Process();
 
 int32 Average(int32 a, int32 b)
 {

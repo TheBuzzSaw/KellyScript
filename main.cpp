@@ -152,23 +152,14 @@ int main(int argc, char** argv)
 
         for (auto token : treeFood.tokens)
         {
-            auto tokenTypeName = "unknown";
-
-            switch(token.type)
-            {
-                case Token::Identifier: tokenTypeName = "identifier"; break;
-                case Token::Symbol: tokenTypeName = "symbol"; break;
-                case Token::NumericLiteral: tokenTypeName = "number"; break;
-                case Token::StringLiteral: tokenTypeName = "string"; break;
-                default: break;
-            }
-
             View<const char> v
                 {treeFood.source.data() + token.start, token.length};
 
-            cout << tokenTypeName << " @ row " << token.row << " col "
-                << token.column << " " << v << '\n';
+            cout << TokenTypeString(token.type) << " @ row " << token.row
+                << " col " << token.column << " " << v << '\n';
         }
+
+        Eat(treeFood);
     }
 
     if (argc < 2)
