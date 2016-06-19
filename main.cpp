@@ -138,6 +138,12 @@ int main(int argc, char** argv)
 
         cout << "parsed " << treeFood.tokens.size() << " tokens\n";
 
+        for (auto value : treeFood.integers)
+        {
+            cout << "integer value " << value.value << " @ "
+                << value.tokenIndex << endl;
+        }
+
         for (auto token : treeFood.tokens)
         {
             auto tokenTypeName = "unknown";

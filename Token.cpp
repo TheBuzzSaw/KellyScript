@@ -61,6 +61,7 @@ namespace Kelly
         int32_t row = 1;
         int32_t column = 1;
         std::string buffer;
+        auto index = static_cast<int32_t>(result.tokens.size());
 
         auto source = result.source.data();
         for (int32_t i = 0; source[i]; ++i, ++column)
@@ -86,13 +87,17 @@ namespace Kelly
             if (IsDigit(c))
             {
                 token.type = Token::NumericLiteral;
+                uint64_t value = c - '0';
 
                 while (IsDigit(source[i + 1]))
                 {
-                    ++i;
                     ++column;
                     ++token.length;
+
+                    value = value * 10 + (source[++i] - '0');
                 }
+
+                result.integers.push_back({index, value});
             }
             else if (c == '_' || IsLetter(c))
             {
@@ -146,6 +151,11 @@ namespace Kelly
                     {
                         assert(false);
                     }
+
+                    auto text = static_cast<const char*>(
+                        result.stringMemory.Allocate(buffer.size()));
+                    auto textSize = static_cast<ptrdiff_t>(buffer.size());
+                    result.strings.push_back({index, {text, textSize}});
                 }
             }
             else if (IsSymbol(c))

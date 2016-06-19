@@ -1,6 +1,6 @@
 import Kabe.Collections.Arrays;
 import Kabe
-    .                      Stuff;
+    .    Stuff;
 import Kabe.Yup.Even.Moar;
 export Company;
 
@@ -11,7 +11,7 @@ int32 Average(int32 a, int32 b)
 
 int main(int32 argc, int8** argv)
 {
-    Write("The \"average\" is ", Average(7, 9), "\n");
+    Write("The \"average\" is ", Average(789, 945215784225), "\n");
     return 0;
 }
 
