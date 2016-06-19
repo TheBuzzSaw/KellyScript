@@ -1,10 +1,10 @@
 #ifndef TOKEN_HPP
 #define TOKEN_HPP
 
+#include "Region.hpp"
 #include "View.hpp"
-#include <iostream>
 #include <vector>
-#include <cstring>
+#include <string>
 #include <cstdint>
 
 namespace Kelly
@@ -24,24 +24,23 @@ namespace Kelly
         static constexpr int16_t StringLiteral = 4;
     };
 
-    struct Literal
+    template<typename T> struct Value
     {
         int32_t tokenIndex;
-        int16_t type;
-        char data[16];
+        T value;
     };
 
-    template<typename T> void Write(void* data, T value)
+    struct TreeFood
     {
-        *reinterpret_cast<T*>(data) = value;
-    }
+        std::string source;
+        std::vector<Token> tokens;
+        std::vector<Value<uint64_t>> integers;
+        std::vector<Value<double>> floats;
+        std::vector<Value<View<const char>>> strings;
+        Region stringMemory;
+    };
 
-    template<typename T> T Read(const void* data)
-    {
-        return *reinterpret_cast<const T*>(data);
-    }
-
-    std::vector<Token> GetTokens(const char* source);
+    TreeFood ParseFile(const char* path);
 }
 
 #endif

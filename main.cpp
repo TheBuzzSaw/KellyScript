@@ -127,27 +127,18 @@ void TestBytecodes()
 
 int main(int argc, char** argv)
 {
-    uint8_t aa, bb;
-    cout << sizeof(aa | bb) << endl;
-
-    char symbols[] = "`-=[]\\;,./~!@#$%^&*()_+{}|:<>?";
-    sort(symbols, symbols + sizeof(symbols) - 1);
-    cout << symbols << endl;
-
-    ofstream fout("symbols.txt", ofstream::binary);
-    fout << symbols;
-    fout.close();
+    vector<int> vt(128);
+    vt.clear();
+    //vt.shrink_to_fit();
+    cout << "vector test: " << vt.capacity() << endl;
 
     for (int i = 1; i < argc; ++i)
     {
-        auto content = FileToString(argv[1]);
-        cout << "file content:\n" << content << endl;
+        auto treeFood = ParseFile(argv[i]);
 
-        auto tokens = GetTokens(content.data());
+        cout << "parsed " << treeFood.tokens.size() << " tokens\n";
 
-        cout << "parsed " << tokens.size() << " tokens\n";
-
-        for (auto token : tokens)
+        for (auto token : treeFood.tokens)
         {
             auto tokenTypeName = "unknown";
 
@@ -160,7 +151,8 @@ int main(int argc, char** argv)
                 default: break;
             }
 
-            View<const char> v{content.data() + token.start, token.length};
+            View<const char> v
+                {treeFood.source.data() + token.start, token.length};
 
             cout << tokenTypeName << " @ row " << token.row << " col "
                 << token.column << " " << v << '\n';

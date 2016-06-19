@@ -1,6 +1,9 @@
 #include "Token.hpp"
+#include "Tools.hpp"
+#include <fstream>
 #include <algorithm>
 #include <cstdio>
+#include <cassert>
 
 namespace Kelly
 {
@@ -49,13 +52,17 @@ namespace Kelly
             Symbols, Symbols + sizeof(Symbols) - 1, input);
     }
 
-    std::vector<Token> GetTokens(const char* source)
+    TreeFood ParseFile(const char* path)
     {
-        std::vector<Token> tokens;
+        TreeFood result;
+
+        result.source = FileToString(path);
 
         int32_t row = 1;
         int32_t column = 1;
+        std::string buffer;
 
+        auto source = result.source.data();
         for (int32_t i = 0; source[i]; ++i, ++column)
         {
             int c = source[i];
@@ -101,19 +108,44 @@ namespace Kelly
             else if (c == '"')
             {
                 token.type = Token::StringLiteral;
+                buffer.clear();
 
-                while (IsStringLiteralSafe(source[i + 1]))
+                int skip = 0;
+
+                for (auto j = i + 1; source[j]; ++j)
                 {
                     ++i;
                     ++column;
                     ++token.length;
-                }
 
-                if (source[i + 1] == '"')
-                {
-                    ++i;
-                    ++column;
-                    ++token.length;
+                    if (skip > 0)
+                    {
+                        --skip;
+                        continue;
+                    }
+
+                    if (source[j] == '"') break;
+
+                    if (source[j] == '\\')
+                    {
+                        skip = 1;
+                        switch(source[j + 1])
+                        {
+                            case '"': buffer += '"'; break;
+                            case 'n': buffer += '\n'; break;
+                            case 't': buffer += '\t'; break;
+                            case '\\': buffer += '\\'; break;
+                            default: assert(false); break;
+                        }
+                    }
+                    else if (IsStringLiteralSafe(source[j]))
+                    {
+                        buffer += source[j];
+                    }
+                    else
+                    {
+                        assert(false);
+                    }
                 }
             }
             else if (IsSymbol(c))
@@ -128,9 +160,9 @@ namespace Kelly
                 }
             }
 
-            if (token.type != Token::Unknown) tokens.push_back(token);
+            if (token.type != Token::Unknown) result.tokens.push_back(token);
         }
 
-        return tokens;
+        return result;
     }
 }

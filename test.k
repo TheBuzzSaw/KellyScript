@@ -11,7 +11,7 @@ int32 Average(int32 a, int32 b)
 
 int main(int32 argc, int8** argv)
 {
-    Write("The average is ", Average(7, 9));
+    Write("The \"average\" is ", Average(7, 9), "\n");
     return 0;
 }
 
