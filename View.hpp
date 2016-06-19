@@ -25,6 +25,16 @@ namespace Kelly
         return view.first + view.length;
     }
 
+    inline bool operator==(View<const char> a, View<const char> b)
+    {
+        return a.length == b.length && !memcmp(a.first, b.first, a.length);
+    }
+
+    inline bool operator!=(View<const char> a, View<const char> b)
+    {
+        return !(a == b);
+    }
+
     inline bool operator==(View<const char> a, const char* b)
     {
         return !strncmp(a.first, b, a.length);

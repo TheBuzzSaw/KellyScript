@@ -1,15 +1,25 @@
 export Company.Validator;
 export 792;
-import Kabe.Collections.Arrays;
-import Kabe
+export Kabe.Collections.Arrays;
+export Kabe
     .    Stuff;
-import Kabe.Yup.Even.Moar;
+export Kabe.Yup.Even.Moar;
 
 Process();
 
 int32 Average(int32 a, int32 b)
 {
     return (a + b) / 2;
+}
+
+int32 Average(int32[] values)
+{
+    return sum(values) / values.count;
+}
+
+int32 Average(int32* values, int32 count)
+{
+    return ...;
 }
 
 int main(int32 argc, int8** argv)

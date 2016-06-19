@@ -5,6 +5,18 @@ using namespace std;
 
 namespace Kelly
 {
+    Value<Package> AbstractSyntaxTree::FindPackage(Package package)
+    {
+        for (size_t i = 0; i < packages.size(); ++i)
+        {
+            auto p = packages[i];
+            if (package.name == p.name && package.parentIndex == p.parentIndex)
+                return {static_cast<int32_t>(i), p};
+        }
+
+        return {-1, {}};
+    }
+
     AbstractSyntaxTree Eat(const TreeFood& food)
     {
         AbstractSyntaxTree result;
@@ -24,11 +36,74 @@ namespace Kelly
                 cout << "found an export!\n";
 
                 token = food.tokens[++i];
+                v = {source + token.start, token.length};
 
-                if (token.type != Token::Identifier)
+                if (token.type == Token::Identifier)
                 {
+                    auto package = result.FindPackage({v, -1});
+
+                    if (package.index < 0)
+                    {
+                        package.index = static_cast<int32_t>(
+                            result.packages.size());
+                        package.value = {v, -1};
+                        result.packages.push_back(package.value);
+                    }
+
+                    token = food.tokens[++i];
                     v = {source + token.start, token.length};
 
+                    while (token.type == Token::Symbol)
+                    {
+                        if (v == ";") break;
+
+                        if (v != ".")
+                        {
+                            cout << food.path << ':' << token.row << ':'
+                                << token.column << ':'
+                                << " expected '.' or ';'; found "
+                                << TokenTypeString(token.type) << ' ' << v
+                                << '\n';
+
+                            break;
+                        }
+
+                        token = food.tokens[++i];
+                        v = {source + token.start, token.length};
+
+                        if (token.type == Token::Identifier)
+                        {
+                            auto nextPackage = result.FindPackage(
+                                {v, package.index});
+
+                            if (nextPackage.index < 0)
+                            {
+                                nextPackage.index = static_cast<int32_t>(
+                                    result.packages.size());
+                                nextPackage.value.name = v;
+                                nextPackage.value.parentIndex = package.index;
+                                result.packages.push_back(nextPackage.value);
+                            }
+
+                            package = nextPackage;
+                        }
+                        else
+                        {
+                            cout << food.path << ':' << token.row << ':'
+                                << token.column << ':'
+                                << " expected package identifier; found "
+                                << TokenTypeString(token.type) << ' ' << v
+                                << '\n';
+
+                            break;
+                        }
+
+                        token = food.tokens[++i];
+                        v = {source + token.start, token.length};
+                    }
+                }
+                else
+                {
                     cout << food.path << ':' << token.row << ':'
                         << token.column << ':'
                         << " expected package identifier; found "

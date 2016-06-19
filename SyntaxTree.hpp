@@ -8,7 +8,7 @@ namespace Kelly
     struct Package
     {
         View<const char> name;
-        Package* parent;
+        int32_t parentIndex;
     };
 
     struct AbstractSyntaxTree
@@ -16,6 +16,8 @@ namespace Kelly
         Region nodeMemory;
         Region stringMemory;
         std::vector<Package> packages;
+
+        Value<Package> FindPackage(Package package);
     };
 
     AbstractSyntaxTree Eat(const TreeFood& food);

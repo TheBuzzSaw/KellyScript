@@ -141,13 +141,13 @@ int main(int argc, char** argv)
         for (auto value : treeFood.integers)
         {
             cout << "integer value " << value.value << " @ "
-                << value.tokenIndex << endl;
+                << value.index << endl;
         }
 
         for (auto text : treeFood.strings)
         {
             cout << "string value [" << text.value << " @ "
-                << text.tokenIndex << ']' << endl;
+                << text.index << ']' << endl;
         }
 
         for (auto token : treeFood.tokens)
@@ -159,7 +159,22 @@ int main(int argc, char** argv)
                 << " col " << token.column << " " << v << '\n';
         }
 
-        Eat(treeFood);
+        auto ast = Eat(treeFood);
+
+        int n = -1;
+        for (auto package : ast.packages)
+        {
+            cout << '[' << ++n << ']' << package.name;
+
+            while (package.parentIndex >= 0)
+            {
+                auto pi = package.parentIndex;
+                package = ast.packages[package.parentIndex];
+                cout << " <- [" << pi << ']' << package.name;
+            }
+
+            cout << '\n';
+        }
     }
 
     if (argc < 2)

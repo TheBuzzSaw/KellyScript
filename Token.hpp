@@ -28,7 +28,7 @@ namespace Kelly
 
     template<typename T> struct Value
     {
-        int32_t tokenIndex;
+        int32_t index;
         T value;
     };
 
