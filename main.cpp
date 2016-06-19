@@ -144,6 +144,12 @@ int main(int argc, char** argv)
                 << value.tokenIndex << endl;
         }
 
+        for (auto text : treeFood.strings)
+        {
+            cout << "string value [" << text.value << " @ "
+                << text.tokenIndex << ']' << endl;
+        }
+
         for (auto token : treeFood.tokens)
         {
             auto tokenTypeName = "unknown";
