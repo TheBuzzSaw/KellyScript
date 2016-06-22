@@ -176,11 +176,54 @@ namespace Kelly
             {
                 token.type = Token::Symbol;
 
-                while (IsSymbol(source[i + 1]))
+                if (c == '/')
                 {
-                    ++i;
-                    ++column;
-                    ++token.length;
+                    if (source[i + 1] == '/')
+                    {
+                        token.type = Token::Unknown; // Found a comment!
+
+                        ++i;
+                        ++column;
+                        ++token.length;
+
+                        while (source[i + 1] && source[i + 1] != '\n')
+                        {
+                            ++i;
+                            ++column;
+                            ++token.length;
+                        }
+                    }
+                    else if (source[i + 1] == '*')
+                    {
+                        token.type = Token::Unknown; // Found a comment!
+                        int level = 1;
+
+                        ++i;
+                        ++column;
+                        ++token.length;
+
+                        while (level > 0 && source[i + 1])
+                        {
+                            ++i;
+                            ++column;
+                            ++token.length;
+
+                            if (source[i] == '*' && source[i + 1] == '/')
+                            {
+                                ++i;
+                                ++column;
+                                ++token.length;
+                                --level;
+                            }
+                            else if (source[i] == '/' && source[i + 1] == '*')
+                            {
+                                ++i;
+                                ++column;
+                                ++token.length;
+                                ++level;
+                            }
+                        }
+                    }
                 }
             }
 
