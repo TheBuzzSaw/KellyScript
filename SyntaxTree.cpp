@@ -22,6 +22,7 @@ namespace Kelly
         AbstractSyntaxTree result;
         auto source = food.source.data();
         int32_t exportPackageIndex = -1;
+        std::vector<int32_t> importedPackageIndices;
 
         for (size_t i = 0; i < food.tokens.size(); ++i)
         {
@@ -83,6 +84,8 @@ namespace Kelly
 
                                 break;
                             }
+
+                            importedPackageIndices.push_back(package.index);
                         }
                         else
                         {
@@ -202,6 +205,22 @@ namespace Kelly
                 //cout << "error: expected import or export";
             }
         }
+
+        cout << "imported packages:";
+        for (auto index : importedPackageIndices)
+        {
+            auto package = result.packages[index];
+            cout << "\n[" << index << "]" << package.name;
+
+            while (package.parentIndex >= 0)
+            {
+                cout << " <- [" << package.parentIndex << "]";
+                package = result.packages[package.parentIndex];
+                cout << package.name;
+            }
+        }
+
+        cout << '\n';
 
         return result;
     }

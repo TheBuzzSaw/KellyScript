@@ -161,6 +161,7 @@ int main(int argc, char** argv)
 
         auto ast = Eat(treeFood);
 
+        cout << "all packages:\n";
         int n = -1;
         for (auto package : ast.packages)
         {
