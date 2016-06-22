@@ -21,6 +21,7 @@ namespace Kelly
     {
         AbstractSyntaxTree result;
         auto source = food.source.data();
+        int32_t exportPackageIndex = -1;
 
         for (size_t i = 0; i < food.tokens.size(); ++i)
         {
@@ -30,10 +31,92 @@ namespace Kelly
             if (v == "import")
             {
                 cout << "found an import!\n";
+
+                token = food.tokens[++i];
+                v = {source + token.start, token.length};
+
+                if (token.type == Token::Identifier)
+                {
+                    auto package = result.FindPackage({v, -1});
+
+                    if (package.index < 0)
+                    {
+                        cout << food.path << ':' << token.row << ':'
+                            << token.column << ':'
+                            << " no such package " << v
+                            << '\n';
+
+                        break;
+                    }
+
+                    token = food.tokens[++i];
+                    v = {source + token.start, token.length};
+
+                    while (token.type == Token::Symbol)
+                    {
+                        if (v == ";") break;
+
+                        if (v != ".")
+                        {
+                            cout << food.path << ':' << token.row << ':'
+                                << token.column << ':'
+                                << " expected '.' or ';'; found "
+                                << TokenTypeString(token.type) << ' ' << v
+                                << '\n';
+
+                            break;
+                        }
+
+                        token = food.tokens[++i];
+                        v = {source + token.start, token.length};
+
+                        if (token.type == Token::Identifier)
+                        {
+                            package = result.FindPackage({v, package.index});
+
+                            if (package.index < 0)
+                            {
+                                cout << food.path << ':' << token.row << ':'
+                                    << token.column << ':'
+                                    << " no such package " << v
+                                    << '\n';
+
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            cout << food.path << ':' << token.row << ':'
+                                << token.column << ':'
+                                << " expected package identifier; found "
+                                << TokenTypeString(token.type) << ' ' << v
+                                << '\n';
+
+                            break;
+                        }
+
+                        token = food.tokens[++i];
+                        v = {source + token.start, token.length};
+                    }
+                }
+                else
+                {
+                    cout << food.path << ':' << token.row << ':'
+                        << token.column << ':'
+                        << " expected package identifier; found "
+                        << TokenTypeString(token.type) << ' ' << v
+                        << '\n';
+
+                    break;
+                }
             }
             else if (v == "export")
             {
-                cout << "found an export!\n";
+                if (exportPackageIndex >= 0)
+                {
+                    cout << "Exporting another package! We already exported "
+                        << result.packages[exportPackageIndex].name << "!\n";
+                }
 
                 token = food.tokens[++i];
                 v = {source + token.start, token.length};
@@ -86,6 +169,9 @@ namespace Kelly
                             }
 
                             package = nextPackage;
+
+                            if (exportPackageIndex < 0)
+                                exportPackageIndex = package.index;
                         }
                         else
                         {

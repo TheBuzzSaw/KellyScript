@@ -4,6 +4,12 @@ export Kabe.Collections.Arrays;
 export Kabe
     .    Stuff;
 export Kabe.Yup.Even.Moar;
+export Kabe.Even.Yup;
+
+import Kabe.Collections;
+import Kabe.Nope;
+import Kabe.Even.Blargh;
+import Garbage.Nope;
 
 Process();
 

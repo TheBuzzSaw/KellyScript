@@ -27,7 +27,8 @@ namespace Kelly
 
     inline bool operator==(View<const char> a, View<const char> b)
     {
-        return a.length == b.length && !memcmp(a.first, b.first, a.length);
+        return a.length == b.length &&
+            (a.first == b.first || !memcmp(a.first, b.first, a.length));
     }
 
     inline bool operator!=(View<const char> a, View<const char> b)
