@@ -11,7 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="clang" />
-				<Option parameters="test.k -optimize -fix" />
+				<Option parameters="test.k" />
 				<Compiler>
 					<Add option="-fsanitize=address" />
 					<Add option="-g" />

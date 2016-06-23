@@ -1,7 +1,5 @@
+//export 792;
 export Company.Validator;
-/*
-export 792;
-*/
 export Kabe.Collections.Arrays;
 export Kabe
     .    Stuff;
@@ -16,9 +14,40 @@ import Garbage.Nope;
 
 Process();
 
+int32 GlobalGarbage;
+
 int32 Average(int32 a, int32 b)
 {
     return (a + b) / 2;
+}
+
+(int32 low, int32 high) LowToHigh (int32 a, int32 b)
+{
+}
+
+LowToHigh (int32 a, int32 b) to (int32 low, int32 high)
+{
+    return b < a ? b, a : a, b;
+    
+    low = min(a, b);
+    high = max(a, b);
+    
+    low = 7;
+    
+    // 500 lines later
+    
+    high = 12;
+}
+
+func Average : (int32 a, int32 b) -> (int32 result)
+{
+    result = (a + b) / 2;
+}
+
+Save : (int32 a, int32 b)
+{
+    WriteToFile(a);
+    WriteToFile(b);
 }
 
 int32 Average(int32[] values)

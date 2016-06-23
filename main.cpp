@@ -159,23 +159,8 @@ int main(int argc, char** argv)
                 << " col " << token.column << " " << v << '\n';
         }
 
-        auto ast = Eat(treeFood);
-
-        cout << "all packages:\n";
-        int n = -1;
-        for (auto package : ast.packages)
-        {
-            cout << '[' << ++n << ']' << package.name;
-
-            while (package.parentIndex >= 0)
-            {
-                auto pi = package.parentIndex;
-                package = ast.packages[package.parentIndex];
-                cout << " <- [" << pi << ']' << package.name;
-            }
-
-            cout << '\n';
-        }
+        AbstractSyntaxTree ast;
+        ast.Eat(treeFood);
     }
 
     if (argc < 2)

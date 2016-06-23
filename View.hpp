@@ -38,12 +38,12 @@ namespace Kelly
 
     inline bool operator==(View<const char> a, const char* b)
     {
-        return !strncmp(a.first, b, a.length);
+        return !strncmp(a.first, b, a.length) && !b[a.length];
     }
 
     inline bool operator!=(View<const char> a, const char* b)
     {
-        return strncmp(a.first, b, a.length);
+        return strncmp(a.first, b, a.length) || b[a.length];
     }
 
     inline std::ostream& operator<<(

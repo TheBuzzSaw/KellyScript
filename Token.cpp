@@ -230,6 +230,10 @@ namespace Kelly
             if (token.type != Token::Unknown) result.tokens.push_back(token);
         }
 
+        // Safety buffer for lookahead!
+        for (int i = 0; i < 4; ++i)
+            result.tokens.push_back({});
+
         return result;
     }
 }
