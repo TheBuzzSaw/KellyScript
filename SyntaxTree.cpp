@@ -98,7 +98,11 @@ namespace Kelly
 
                 if (buffer.size() > 0)
                 {
-                    cout << "export " << buffer << endl;
+                    auto v2 = stringMemory.AllocateAndWriteString(
+                        buffer.size(),
+                        buffer.data());
+
+                    cout << "exported " << v2 << endl;
                 }
                 else
                 {

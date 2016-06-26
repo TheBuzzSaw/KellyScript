@@ -23,6 +23,8 @@ int32 Average(int32 a, int32 b)
 
 (int32 low, int32 high) LowToHigh (int32 a, int32 b)
 {
+    import System.Memory;
+    HeapLoader();
 }
 
 LowToHigh (int32 a, int32 b) to (int32 low, int32 high)

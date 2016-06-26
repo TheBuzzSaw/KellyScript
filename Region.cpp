@@ -1,5 +1,6 @@
 #include "Region.hpp"
 #include <iostream>
+#include <cstring>
 #include <cassert>
 
 namespace Kelly
@@ -77,6 +78,19 @@ namespace Kelly
         header->freeByteCount -= byteCount;
         ++header->allocationCount;
         return result;
+    }
+
+    void* Region::AllocateAndWrite(int byteCount, const void* data)
+    {
+        auto block = Allocate(byteCount);
+        memcpy(block, data, byteCount);
+        return block;
+    }
+
+    View<char> Region::AllocateAndWriteString(int byteCount, const char* data)
+    {
+        auto block = AllocateAndWrite(byteCount, data);
+        return {static_cast<char*>(block), byteCount};
     }
 
     int Region::PageCount() const noexcept

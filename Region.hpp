@@ -1,6 +1,7 @@
 #ifndef REGION_HPP_KELLY
 #define REGION_HPP_KELLY
 
+#include "View.hpp"
 #include <cstdlib>
 
 namespace Kelly
@@ -21,6 +22,8 @@ namespace Kelly
         Region& operator=(const Region&) = delete;
 
         void* Allocate(int byteCount);
+        void* AllocateAndWrite(int byteCount, const void* data);
+        View<char> AllocateAndWriteString(int byteCount, const char* data);
         int PageCount() const noexcept;
         void DebugDump() const;
     };
