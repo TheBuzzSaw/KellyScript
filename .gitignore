@@ -3,6 +3,7 @@ obj/
 *.depend
 *.layout
 *.cbTemp
+*.bin
 
 /dump.txt
 /symbols.txt
