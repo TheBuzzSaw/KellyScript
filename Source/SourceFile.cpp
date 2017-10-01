@@ -1,11 +1,10 @@
 #include "SourceFile.hpp"
-#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <algorithm>
 
 // Make sure these symbols are ascending order always!
-static char theSymbols[] = "!\"#$%&'()*+,-./:;<=>?@[\\]^`{|}~";
+static char theSymbols[] = "!#$%&'()*+,-./:;<=>?@[\\]^`{|}~";
 static char theEscapeSequences[] = "\"'?\\abfnrtv";
 
 static bool IsSymbol(char c)
@@ -142,7 +141,7 @@ struct SourceReader
         lastSourceToken.token = Token::StringLiteral;
         Advance();
         
-        while (index < length && source[index] != '"')
+        while (index < length)
         {
             ++lastSourceToken.length;
             
@@ -152,6 +151,11 @@ struct SourceReader
                 Advance();
                 
                 (void)IsEscapeSequence;
+            }
+            else if (source[index] == '"')
+            {
+                Advance();
+                break;
             }
             
             Advance();
@@ -178,6 +182,7 @@ struct SourceReader
         EatSpace();
         if (index < length)
         {
+            result = true;
             char c = source[index];
             
             if (IsAlpha(c) || c == '_')
@@ -188,6 +193,8 @@ struct SourceReader
                 ParseStringLiteral();
             else if (IsSymbol(c))
                 ParseSymbols();
+            else
+                result = false;
         }
         
         return result;
@@ -215,6 +222,42 @@ SourceFile LexSource(const char* file)
         theEscapeSequences + sizeof(theEscapeSequences) - 1);
     std::cout << theEscapeSequences << '\n';
     
+    while (reader.Read())
+        result.sourceTokens.push_back(reader.lastSourceToken);
+    
     return result;
+}
+
+std::ostream& operator<<(std::ostream& stream, Token token)
+{
+    const char* text;
+    
+    switch (token)
+    {
+        case Token::Identifier: text = "identifier"; break;
+        case Token::NumericLiteral: text = "numeric literal"; break;
+        case Token::StringLiteral: text = "string literal"; break;
+        case Token::Symbols: text = "symbols"; break;
+        default: text = "unknown"; break;
+    }
+    
+    return stream << text;
+}
+
+std::ostream& operator<<(std::ostream& stream, const SourceFile& sourceFile)
+{
+    for (const auto& sourceToken : sourceFile.sourceTokens)
+    {
+        stream << "Line " << sourceToken.textPosition.line
+            << " Col " << sourceToken.textPosition.column
+            << ' ' << sourceToken.token
+            << " : ";
+        
+        stream.write(
+            sourceFile.source.data() + sourceToken.offset,
+            sourceToken.length) << '\n';
+    }
+    
+    return stream;
 }
 
