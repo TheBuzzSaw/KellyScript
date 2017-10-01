@@ -24,7 +24,7 @@ obj/%.o: Source/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 $(TARGET) : $(OBJ_FILES)
-	$(CXX) -o $@ $< $(LDFLAGS) $(LDLIBS)
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
 clean :
 	rm -f -v obj/*.o *.exe *.bin
