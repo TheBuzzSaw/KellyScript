@@ -4,7 +4,7 @@
 #include <algorithm>
 
 // Make sure these symbols are ascending order always!
-static char theSymbols[] = "!#$%&'()*+,-./:;<=>?@[\\]^`{|}~";
+static char theSymbols[] = "!#$%&()*+,-./:;<=>?@[\\]^`{|}~";
 static char theEscapeSequences[] = "\"'?\\abfnrtv";
 
 static bool IsSymbol(char c)
@@ -168,7 +168,36 @@ struct SourceReader
         }
     }
     
+    void ParseCharacterLiteral()
+    {
+        StartToken();
+        lastSourceToken.token = Token::CharacterLiteral;
+        Advance();
+        
+        while (index < length)
+        {
+            std::cout << "FOUND " << (int)Current() << '\n';
+            ++lastSourceToken.length;
+            
+            if (Current() == '\\')
+            {
+                ++lastSourceToken.length;
+                Advance();
+                
+                (void)IsEscapeSequence;
+            }
+            else if (Current() == '\'')
+            {
+                Advance();
+                break;
+            }
+            
+            Advance();
+        }
+    }
+    
     void ParseLineComment()
+    
     {
         lastSourceToken.token = Token::Comment;
         ++lastSourceToken.length;
@@ -265,6 +294,8 @@ struct SourceReader
                 ParseNumericLiteral();
             else if (c == '"')
                 ParseStringLiteral();
+            else if (c == '\'')
+                ParseCharacterLiteral();
             else if (IsSymbol(c))
                 ParseSymbols();
             else
@@ -311,6 +342,7 @@ std::ostream& operator<<(std::ostream& stream, Token token)
         case Token::Identifier: text = "identifier"; break;
         case Token::NumericLiteral: text = "numeric literal"; break;
         case Token::StringLiteral: text = "string literal"; break;
+        case Token::CharacterLiteral: text = "character literal"; break;
         case Token::Symbols: text = "symbols"; break;
         case Token::Comment: text = "comment"; break;
         default: text = "unknown"; break;
@@ -326,7 +358,8 @@ std::ostream& operator<<(std::ostream& stream, const SourceFile& sourceFile)
         stream << "Line " << sourceToken.textPosition.line
             << " Col " << sourceToken.textPosition.column
             << ' ' << sourceToken.token
-            << " : ";
+            << " (" << sourceToken.length
+            << ") : ";
         
         stream.write(
             sourceFile.source.data() + sourceToken.offset,

@@ -16,6 +16,7 @@ enum class Token
     Identifier,
     NumericLiteral,
     StringLiteral,
+    CharacterLiteral,
     Symbols,
     Comment
 };

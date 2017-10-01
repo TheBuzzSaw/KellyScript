@@ -68,6 +68,7 @@ int32 Average(int32* values, int32 count)
 int main(int32 argc, int8** argv)
 {
     Write("The \"average\" is ", Average(789, 945215784225), "...\n");
+    Write('a', '\n');
     return 0;
 }
-// asdf
+'
