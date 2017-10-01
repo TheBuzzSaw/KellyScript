@@ -16,7 +16,8 @@ enum class Token
     Identifier,
     NumericLiteral,
     StringLiteral,
-    Symbols
+    Symbols,
+    Comment
 };
 
 struct SourceToken

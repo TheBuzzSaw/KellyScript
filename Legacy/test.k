@@ -48,7 +48,10 @@ func Average : (int32 a, int32 b) -> (int32 result)
 
 Save : (int32 a, int32 b)
 {
+    /** This method is
+    super crazy. ****/
     WriteToFile(a);
+    /* Even /* crazier */ */
     WriteToFile(b);
 }
 
@@ -67,4 +70,4 @@ int main(int32 argc, int8** argv)
     Write("The \"average\" is ", Average(789, 945215784225), "...\n");
     return 0;
 }
-
+// asdf

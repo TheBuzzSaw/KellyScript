@@ -80,26 +80,32 @@ struct SourceReader
     SourceToken lastSourceToken;
     std::string errorMessage;
     
+    char Current()
+    {
+        return source[index];
+    }
+    
+    char Next()
+    {
+        return source[index + 1];
+    }
+    
     void Advance()
     {
-        ++position.column;
-        ++index;
+        if (source[index++] == '\n')
+        {
+            ++position.line;
+            position.column = 1;
+        }
+        else
+        {
+            ++position.column;
+        }
     }
     
     void EatSpace()
     {
-        while (index < length && IsSpace(source[index]))
-        {
-            if (source[index++] == '\n')
-            {
-                ++position.line;
-                position.column = 1;
-            }
-            else
-            {
-                ++position.column;
-            }
-        }
+        while (index < length && IsSpace(Current())) Advance();
     }
     
     void StartToken()
@@ -115,7 +121,7 @@ struct SourceReader
         lastSourceToken.token = Token::Identifier;
         Advance();
         
-        while (index < length && IsIdentifierSafe(source[index]))
+        while (index < length && IsIdentifierSafe(Current()))
         {
             ++lastSourceToken.length;
             Advance();
@@ -128,7 +134,7 @@ struct SourceReader
         lastSourceToken.token = Token::NumericLiteral;
         Advance();
         
-        while (index < length && IsDigit(source[index]))
+        while (index < length && IsDigit(Current()))
         {
             ++lastSourceToken.length;
             Advance();
@@ -145,14 +151,14 @@ struct SourceReader
         {
             ++lastSourceToken.length;
             
-            if (source[index] == '\\')
+            if (Current() == '\\')
             {
                 ++lastSourceToken.length;
                 Advance();
                 
                 (void)IsEscapeSequence;
             }
-            else if (source[index] == '"')
+            else if (Current() == '"')
             {
                 Advance();
                 break;
@@ -162,16 +168,84 @@ struct SourceReader
         }
     }
     
-    void ParseSymbols()
+    void ParseLineComment()
     {
-        StartToken();
-        lastSourceToken.token = Token::Symbols;
+        lastSourceToken.token = Token::Comment;
+        ++lastSourceToken.length;
+        Advance();
         Advance();
         
-        while (index < length && IsSymbol(source[index]))
+        int line = position.line;
+        
+        while (index < length && line == position.line)
         {
             ++lastSourceToken.length;
             Advance();
+        }
+        
+        if (line != position.line)
+            --lastSourceToken.length;
+    }
+    
+    void ParseBlockComment()
+    {
+        lastSourceToken.token = Token::Comment;
+        ++lastSourceToken.length;
+        Advance();
+        Advance();
+        
+        int nestLevel = 1;
+        
+        while (index < length && nestLevel > 0)
+        {
+            if (Current() == '/' && Next() == '*')
+            {
+                ++nestLevel;
+                ++lastSourceToken.length;
+                Advance();
+            }
+            else if (Current() == '*' && Next() == '/')
+            {
+                --nestLevel;
+                ++lastSourceToken.length;
+                Advance();
+            }
+            
+            ++lastSourceToken.length;
+            Advance();
+        }
+    }
+    
+    void ParseSymbols()
+    {
+        StartToken();
+        
+        switch (Current())
+        {
+            case '/':
+                if (Next() == '/')
+                {
+                    ParseLineComment();
+                    break;
+                }
+                else if (Next() == '*')
+                {
+                    ParseBlockComment();
+                    break;
+                }
+                
+                // Yes. No break. This is deliberate.
+                
+            default:
+                lastSourceToken.token = Token::Symbols;
+                Advance();
+                
+                while (index < length && IsSymbol(Current()))
+                {
+                    ++lastSourceToken.length;
+                    Advance();
+                }
+                break;
         }
     }
     
@@ -183,7 +257,7 @@ struct SourceReader
         if (index < length)
         {
             result = true;
-            char c = source[index];
+            char c = Current();
             
             if (IsAlpha(c) || c == '_')
                 ParseIdentifier();
@@ -238,6 +312,7 @@ std::ostream& operator<<(std::ostream& stream, Token token)
         case Token::NumericLiteral: text = "numeric literal"; break;
         case Token::StringLiteral: text = "string literal"; break;
         case Token::Symbols: text = "symbols"; break;
+        case Token::Comment: text = "comment"; break;
         default: text = "unknown"; break;
     }
     
