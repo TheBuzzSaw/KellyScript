@@ -21,6 +21,7 @@ release : CXXFLAGS += -O2
 release : $(TARGET)
 
 obj/%.o: Source/%.cpp
+	mkdir -p obj
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 $(TARGET) : $(OBJ_FILES)
