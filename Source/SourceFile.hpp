@@ -13,12 +13,54 @@ struct TextPosition
 
 enum class Token
 {
+    None,
     Identifier,
     NumericLiteral,
     StringLiteral,
     CharacterLiteral,
     Symbols,
-    Comment
+    Comment,
+    
+    Comma,
+    OpenParen,
+    CloseParen,
+    OpenBracket,
+    CloseBracket,
+    OpenBrace,
+    CloseBrace,
+    AssignOp,
+    AddAssignOp,
+    SubAssignOp,
+    MultAssignOp,
+    DivAssignOp,
+    ModAssignOp,
+    AndAssignOp,
+    OrAssignOp,
+    XorAssignOp,
+    LeftShiftAssignOp,
+    RightShiftAssignOp,
+    AddOp,
+    SubOp,
+    MultOp,
+    DivOp,
+    ModOp,
+    LeftShiftOp,
+    RightShiftOp,
+    IncOp,
+    DecOp,
+    LogicalNotOp,
+    BitwiseNotOp,
+    LogicalAndOp,
+    LogicalOrOp,
+    BitwiseAndOp,
+    BitwiseOrOp,
+    BitwiseXorOp,
+    EqualOp,
+    NotEqualOp,
+    LessOp,
+    LessOrEqualOp,
+    GreaterOp,
+    GreaterOrEqualOp
 };
 
 struct SourceToken
@@ -36,6 +78,8 @@ struct SourceFile
     std::vector<SourceToken> sourceTokens;
 };
 
+const char* TokenName(Token token);
+void PrepareLexer();
 SourceFile LexSource(const char* file);
 std::ostream& operator<<(std::ostream& stream, Token token);
 std::ostream& operator<<(std::ostream& stream, const SourceFile& sourceFile);

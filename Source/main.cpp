@@ -5,6 +5,7 @@ using namespace std;
 int main(int argc, char** argv)
 {
     cout << "Version 0\n";
+    PrepareLexer();
     for (int i = 1; i < argc; ++i)
     {
         auto sourceFile = LexSource(argv[1]);
