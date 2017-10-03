@@ -60,7 +60,11 @@ enum class Token
     LessOp,
     LessOrEqualOp,
     GreaterOp,
-    GreaterOrEqualOp
+    GreaterOrEqualOp,
+    
+    Dot,
+    Semicolon,
+    Colon
 };
 
 struct SourceToken

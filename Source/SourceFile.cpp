@@ -1,11 +1,11 @@
 #include "SourceFile.hpp"
 #include "TinyString.hpp"
+#include "DataMap.hpp"
 #include <fstream>
 #include <sstream>
 #include <algorithm>
-#include <map> // TODO: Replace this with awesomeness.
 
-static std::map<TinyString<int>, Token> theTokensBySource;
+static DataMap<TinyString<int>, Token> theTokensBySource;
 
 // Make sure these symbols are ascending order always!
 static char theSymbols[] = "!#$%&()*+,-./:;<=>?@[\\]^`{|}~";
@@ -13,9 +13,9 @@ static char theEscapeSequences[] = "\"'?\\abfnrtv";
 
 static Token FindOperator(TinyString<int> source)
 {
-    auto i = theTokensBySource.find(source);
+    auto token = theTokensBySource.TryGetValue(source);
     
-    return i == theTokensBySource.end() ? Token::None : i->second;
+    return token ? *token : Token::None;
 }
 
 static bool IsSymbol(char c)
@@ -193,7 +193,6 @@ struct SourceReader
         
         while (index < length)
         {
-            std::cout << "FOUND " << (int)Current() << '\n';
             ++lastSourceToken.length;
             
             if (Current() == '\\')
@@ -336,7 +335,7 @@ static void MapToken(const char* source, Token token)
 {
     TinyString<int> ts = {};
     ts.Assign(source);
-    theTokensBySource[ts] = token;
+    theTokensBySource.Set(ts, token);
 }
 
 void PrepareLexer()
@@ -346,7 +345,7 @@ void PrepareLexer()
     MapToken(")", Token::CloseParen);
     MapToken("[", Token::OpenBracket);
     MapToken("]", Token::CloseBracket);
-    MapToken("}", Token::OpenBrace);
+    MapToken("{", Token::OpenBrace);
     MapToken("}", Token::CloseBrace);
     MapToken("=", Token::AssignOp);
     MapToken("+=", Token::AddAssignOp);
@@ -381,6 +380,9 @@ void PrepareLexer()
     MapToken("<=", Token::LessOrEqualOp);
     MapToken(">", Token::GreaterOp);
     MapToken(">=", Token::GreaterOrEqualOp);
+    MapToken(".", Token::Dot);
+    MapToken(";", Token::Semicolon);
+    MapToken(":", Token::Colon);
 }
 
 SourceFile LexSource(const char* file)
@@ -462,6 +464,9 @@ const char* TokenName(Token token)
         case Token::LessOrEqualOp: text = "less than or equal to operator"; break;
         case Token::GreaterOp: text = "greater than operator"; break;
         case Token::GreaterOrEqualOp: text = "greater than or equal to operator"; break;
+        case Token::Dot: text = "dot"; break;
+        case Token::Semicolon: text = "semicolon"; break;
+        case Token::Colon: text = "colon"; break;
         default: text = "unknown"; break;
     }
     
