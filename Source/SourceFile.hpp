@@ -86,6 +86,7 @@ const char* TokenName(Token token);
 void PrepareLexer();
 SourceFile LexSource(const char* file);
 std::ostream& operator<<(std::ostream& stream, Token token);
+std::ostream& operator<<(std::ostream& stream, TextPosition position);
 std::ostream& operator<<(std::ostream& stream, const SourceFile& sourceFile);
 
 #endif

@@ -14,7 +14,6 @@ static char theEscapeSequences[] = "\"'?\\abfnrtv";
 static Token FindOperator(TinyString<int> source)
 {
     auto token = theTokensBySource.TryGetValue(source);
-    
     return token ? *token : Token::None;
 }
 
@@ -478,12 +477,17 @@ std::ostream& operator<<(std::ostream& stream, Token token)
     return stream << TokenName(token);
 }
 
+
+std::ostream& operator<<(std::ostream& stream, TextPosition position)
+{
+    return stream << "Line " << position.line << " Col " << position.column;
+}
+
 std::ostream& operator<<(std::ostream& stream, const SourceFile& sourceFile)
 {
     for (const auto& sourceToken : sourceFile.sourceTokens)
     {
-        stream << "Line " << sourceToken.textPosition.line
-            << " Col " << sourceToken.textPosition.column
+        stream << sourceToken.textPosition
             << ' ' << sourceToken.token
             << " (" << sourceToken.length
             << ") : ";
