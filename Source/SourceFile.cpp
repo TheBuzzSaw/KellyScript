@@ -82,6 +82,11 @@ static constexpr bool IsIdentifierSafe(char c)
     return IsAlpha(c) || IsDigit(c) || c == '_';
 }
 
+static inline bool IsStringLiteralSafe(char c)
+{
+    return IsIdentifierSafe(c) || IsSymbol(c) || c == ' ';
+}
+
 struct SourceReader
 {
     const char* source;
@@ -89,6 +94,7 @@ struct SourceReader
     int length;
     TextPosition position;
     SourceToken lastSourceToken;
+    TextPosition errorPosition;
     std::string errorMessage;
     
     char Current()
@@ -171,14 +177,26 @@ struct SourceReader
             if (Current() == '\\')
             {
                 ++lastSourceToken.length;
-                Advance();
                 
-                (void)IsEscapeSequence;
+                if (!IsEscapeSequence(Next()))
+                {
+                    errorPosition = lastSourceToken.textPosition;
+                    errorMessage = "invalid escape sequence";
+                    return;
+                }
+                
+                Advance();
             }
             else if (Current() == '"')
             {
                 Advance();
                 break;
+            }
+            else if (!IsStringLiteralSafe(Current()))
+            {
+                errorPosition = lastSourceToken.textPosition;
+                errorMessage = "invalid character; expected \"";
+                return;
             }
             
             Advance();
@@ -382,6 +400,7 @@ void PrepareLexer()
     MapToken(".", Token::Dot);
     MapToken(";", Token::Semicolon);
     MapToken(":", Token::Colon);
+    MapToken("?", Token::Question);
 }
 
 SourceFile LexSource(const char* file)
@@ -405,8 +424,14 @@ SourceFile LexSource(const char* file)
         theEscapeSequences + sizeof(theEscapeSequences) - 1);
     std::cout << theEscapeSequences << '\n';
     
-    while (reader.Read())
+    while (reader.Read() && reader.errorMessage.empty())
         result.sourceTokens.push_back(reader.lastSourceToken);
+    
+    if (!reader.errorMessage.empty())
+    {
+        std::cout << reader.errorPosition << " error - "
+            << reader.errorMessage << '\n';
+    }
     
     return result;
 }
@@ -466,6 +491,7 @@ const char* TokenName(Token token)
         case Token::Dot: text = "dot"; break;
         case Token::Semicolon: text = "semicolon"; break;
         case Token::Colon: text = "colon"; break;
+        case Token::Question: text = "question mark"; break;
         default: text = "unknown"; break;
     }
     

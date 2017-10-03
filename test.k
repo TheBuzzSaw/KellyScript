@@ -70,5 +70,7 @@ int main(int32 argc, int8** argv)
     Write("The \"average\" is ", Average(789, 945215784225), "...\n");
     Write('a', '\n');
     return 0;
+    
+    Failure("\j");
 }
-'
+
