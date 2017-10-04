@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <cstdint>
 
 struct TextPosition
 {
@@ -11,63 +12,25 @@ struct TextPosition
     int column;
 };
 
-enum class Token
+enum class TokenType
 {
     None,
-    Identifier,
-    NumericLiteral,
-    StringLiteral,
-    CharacterLiteral,
-    Symbols,
     Comment,
-    
-    Comma,
-    OpenParen,
-    CloseParen,
-    OpenBracket,
-    CloseBracket,
-    OpenBrace,
-    CloseBrace,
-    AssignOp,
-    AddAssignOp,
-    SubAssignOp,
-    MultAssignOp,
-    DivAssignOp,
-    ModAssignOp,
-    AndAssignOp,
-    OrAssignOp,
-    XorAssignOp,
-    LeftShiftAssignOp,
-    RightShiftAssignOp,
-    AddOp,
-    SubOp,
-    MultOp,
-    DivOp,
-    ModOp,
-    LeftShiftOp,
-    RightShiftOp,
-    IncOp,
-    DecOp,
-    LogicalNotOp,
-    BitwiseNotOp,
-    LogicalAndOp,
-    LogicalOrOp,
-    BitwiseAndOp,
-    BitwiseOrOp,
-    BitwiseXorOp,
-    EqualOp,
-    NotEqualOp,
-    LessOp,
-    LessOrEqualOp,
-    GreaterOp,
-    GreaterOrEqualOp,
-    
-    Dot,
-    Semicolon,
-    Colon,
-    Question,
-    
-    TokenCount
+    Identifier,
+    StringLiteral,
+    CodePointLiteral,
+    Float32Literal,
+    Float64Literal,
+    SignedIntegerLiteral,
+    UnsignedIntegerLiteral,
+    Keyword,
+    Operator
+};
+
+struct TokenMeta
+{
+    const char* source;
+    const char* description;
 };
 
 struct SourceToken
@@ -75,7 +38,17 @@ struct SourceToken
     int offset;
     int length;
     TextPosition textPosition;
-    Token token;
+    TokenType tokenType;
+    int tokenIndex;
+};
+
+union Literal
+{
+    float asFloat32;
+    double asFloat64;
+    int64_t asInt64;
+    uint64_t asUInt64;
+    int asCodePoint;
 };
 
 struct SourceFile
@@ -83,12 +56,14 @@ struct SourceFile
     std::string file;
     std::string source;
     std::vector<SourceToken> sourceTokens;
+    std::vector<Literal> literals;
+    std::vector<std::string> strings;
 };
 
-const char* TokenName(Token token);
 void PrepareLexer();
 SourceFile LexSource(const char* file);
-std::ostream& operator<<(std::ostream& stream, Token token);
+const char* TokenTypeName(TokenType tokenType);
+std::ostream& operator<<(std::ostream& stream, TokenType tokenType);
 std::ostream& operator<<(std::ostream& stream, TextPosition position);
 std::ostream& operator<<(std::ostream& stream, const SourceFile& sourceFile);
 

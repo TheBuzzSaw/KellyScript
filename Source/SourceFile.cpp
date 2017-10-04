@@ -6,17 +6,79 @@
 #include <sstream>
 #include <algorithm>
 
-static DataMap<String4, Token> theTokensBySource;
-static DataMap<CString, Token> theTokensByKeyword;
+static DataMap<String4, int> theTokenIndicesBySymbols;
+static DataMap<CString, int> theTokenIndicesByKeyword;
 
 // Make sure these symbols are ascending order always!
 static char theSymbols[] = "!#$%&()*+,-./:;<=>?@[\\]^`{|}~";
 static char theEscapeSequences[] = "\"'?\\abfnrtv";
 
-static Token FindOperator(String4 source)
+static const TokenMeta KeywordTokens[] = {
+    {"return", "return statement"},
+    };
+
+static constexpr int KeywordTokenCount =
+    sizeof(KeywordTokens) / sizeof(*KeywordTokens);
+
+static const TokenMeta OperatorTokens[] = {
+    {"!", "logical not operator"},
+    {"%", "remainder operator"},
+    {"&", "bitwise and operator"},
+    {"(", "open parenthesis"},
+    {")", "close parenthesis"},
+    {"*", "multiplication operator"},
+    {"+", "addition operator"},
+    {",", "comma"},
+    {"-", "subtraction operator"},
+    {".", "dot"},
+    {"/", "division operator"},
+    {":", "colon"},
+    {";", "semicolon"},
+    {"<", "less than operator"},
+    {"=", "assignment operator"},
+    {">", "greater than operator"},
+    {"?", "question mark"},
+    {"[", "open bracket"},
+    {"]", "close bracket"},
+    {"^", "bitwise xor operator"},
+    {"{", "open brace"},
+    {"|", "bitwise or operator"},
+    {"}", "close brace"},
+    {"~", "bitwise not operator"},
+    {"&&", "logical and operator"},
+    {"++", "increment operator"},
+    {"--", "decrement operator"},
+    {"<<", "left shift operator"},
+    {"!=", "inequality operator"},
+    {"%=", "remainder assignment operator"},
+    {"&=", "and assignment operator"},
+    {"*=", "multiplication assignment operator"},
+    {"+=", "addition assignment operator"},
+    {"-=", "subtraction assignment operator"},
+    {"/=", "division assignment operator"},
+    {"<=", "less than or equal to operator"},
+    {"==", "equality operator"},
+    {">=", "greater than or equal to operator"},
+    {"^=", "xor assignment operator"},
+    {"|=", "or assignment operator"},
+    {">>", "right shift operator"},
+    {"||", "logical or operator"},
+    {"<<=", "left shift assignment operator"},
+    {">>=", "right shift assignment operator"}};
+
+static constexpr int OperatorTokenCount =
+    sizeof(OperatorTokens) / sizeof(*OperatorTokens);
+
+static int FindOperator(String4 source)
 {
-    auto token = theTokensBySource.TryGetValue(source);
-    return token ? *token : Token::None;
+    auto index = theTokenIndicesBySymbols.TryGetValue(source);
+    return index ? *index : -1;
+}
+
+static int FindKeyword(const char* source)
+{
+    auto index = theTokenIndicesByKeyword.TryGetValue({source});
+    return index ? *index : -1;
 }
 
 static bool IsSymbol(char c)
@@ -96,6 +158,8 @@ struct SourceReader
     int length;
     TextPosition position;
     SourceToken lastSourceToken;
+    std::string buffer;
+    Literal literal;
     TextPosition errorPosition;
     std::string errorMessage;
     
@@ -137,6 +201,7 @@ struct SourceReader
         lastSourceToken.offset = index;
         lastSourceToken.length = 1;
         lastSourceToken.textPosition = position;
+        lastSourceToken.tokenIndex = -1;
         
         // Tokens never start with newline.
         ++index;
@@ -146,31 +211,45 @@ struct SourceReader
     void ParseIdentifier()
     {
         StartToken();
-        lastSourceToken.token = Token::Identifier;
+        lastSourceToken.tokenType = TokenType::Identifier;
         
         while (index < length && IsIdentifierSafe(Current()))
         {
             ++lastSourceToken.length;
             Advance();
         }
+        
+        buffer.assign(source + lastSourceToken.offset, lastSourceToken.length);
+        auto tokenIndex = FindKeyword(buffer.data());
+
+        if (tokenIndex != -1)
+        {
+            lastSourceToken.tokenType = TokenType::Keyword;
+            lastSourceToken.tokenIndex = tokenIndex;
+        }
     }
     
     void ParseNumericLiteral()
     {
         StartToken();
-        lastSourceToken.token = Token::NumericLiteral;
+        lastSourceToken.tokenType = TokenType::UnsignedIntegerLiteral;
+        uint64_t value = Previous() - '0';
         
         while (index < length && IsDigit(Current()))
         {
             ++lastSourceToken.length;
+            value = value * 10 + (Current() - '0');
             Advance();
         }
+        
+        literal.asUInt64 = value;
     }
     
     void ParseStringLiteral()
     {
         StartToken();
-        lastSourceToken.token = Token::StringLiteral;
+        lastSourceToken.tokenType = TokenType::StringLiteral;
+        buffer.clear();
         
         while (index < length)
         {
@@ -200,15 +279,19 @@ struct SourceReader
                 errorMessage = "invalid character; expected \"";
                 return;
             }
+            else
+            {
+                buffer += Current();
+            }
             
             Advance();
         }
     }
     
-    void ParseCharacterLiteral()
+    void ParseCodePointLiteral()
     {
         StartToken();
-        lastSourceToken.token = Token::CharacterLiteral;
+        lastSourceToken.tokenType = TokenType::CodePointLiteral;
         
         while (index < length)
         {
@@ -227,13 +310,15 @@ struct SourceReader
                 break;
             }
             
+            literal.asCodePoint = Current();
+            
             Advance();
         }
     }
     
     void ParseLineComment()
     {
-        lastSourceToken.token = Token::Comment;
+        lastSourceToken.tokenType = TokenType::Comment;
         ++lastSourceToken.length;
         Advance();
         
@@ -251,7 +336,7 @@ struct SourceReader
     
     void ParseBlockComment()
     {
-        lastSourceToken.token = Token::Comment;
+        lastSourceToken.tokenType = TokenType::Comment;
         ++lastSourceToken.length;
         Advance();
         
@@ -301,21 +386,24 @@ struct SourceReader
             {
                 String4 tinySource = {};
                 tinySource.Append(Previous());
-                lastSourceToken.token = FindOperator(tinySource);
+                lastSourceToken.tokenType = TokenType::Operator;
+                lastSourceToken.tokenIndex = FindOperator(tinySource);
                 
                 for (int i = index; i < length && IsSymbol(source[i]); ++i)
                 {
                     tinySource.Append(source[i]);
-                    auto token = FindOperator(tinySource);
+                    auto tokenIndex = FindOperator(tinySource);
                     
-                    if (token != Token::None)
+                    if (tokenIndex != -1)
                     {
-                        lastSourceToken.token = token;
+                        lastSourceToken.tokenIndex = tokenIndex;
                         lastSourceToken.length = i - index + 2;
                     }
                 }
                 
-                index += lastSourceToken.length - 1;
+                int offset = lastSourceToken.length - 1;
+                index += offset;
+                position.column += offset;
                 
                 break;
             }
@@ -339,7 +427,7 @@ struct SourceReader
             else if (c == '"')
                 ParseStringLiteral();
             else if (c == '\'')
-                ParseCharacterLiteral();
+                ParseCodePointLiteral();
             else if (IsSymbol(c))
                 ParseSymbols();
             else
@@ -350,67 +438,26 @@ struct SourceReader
     }
 };
 
-static void MapOperatorToken(const char* source, Token token)
+static void MapOperatorToken(const char* source, int index)
 {
     String4 ts = {};
     ts.Assign(source);
-    theTokensBySource.Set(ts, token);
+    theTokenIndicesBySymbols.Set(ts, index);
 }
 
-static void MapKeywordToken(const char* keyword, Token token)
+static void MapKeywordToken(const char* keyword, int index)
 {
     CString cs = {keyword};
-    theTokensByKeyword.Set(cs, token);
+    theTokenIndicesByKeyword.Set(cs, index);
 }
 
 void PrepareLexer()
 {
-    MapOperatorToken(",", Token::Comma);
-    MapOperatorToken("(", Token::OpenParen);
-    MapOperatorToken(")", Token::CloseParen);
-    MapOperatorToken("[", Token::OpenBracket);
-    MapOperatorToken("]", Token::CloseBracket);
-    MapOperatorToken("{", Token::OpenBrace);
-    MapOperatorToken("}", Token::CloseBrace);
-    MapOperatorToken("=", Token::AssignOp);
-    MapOperatorToken("+=", Token::AddAssignOp);
-    MapOperatorToken("-=", Token::SubAssignOp);
-    MapOperatorToken("*=", Token::MultAssignOp);
-    MapOperatorToken("/=", Token::DivAssignOp);
-    MapOperatorToken("%=", Token::ModAssignOp);
-    MapOperatorToken("&=", Token::AndAssignOp);
-    MapOperatorToken("|=", Token::OrAssignOp);
-    MapOperatorToken("^=", Token::XorAssignOp);
-    MapOperatorToken("<<=", Token::LeftShiftAssignOp);
-    MapOperatorToken(">>=", Token::RightShiftAssignOp);
-    MapOperatorToken("+", Token::AddOp);
-    MapOperatorToken("-", Token::SubOp);
-    MapOperatorToken("*", Token::MultOp);
-    MapOperatorToken("/", Token::DivOp);
-    MapOperatorToken("%", Token::ModOp);
-    MapOperatorToken("<<", Token::LeftShiftOp);
-    MapOperatorToken(">>", Token::RightShiftOp);
-    MapOperatorToken("++", Token::IncOp);
-    MapOperatorToken("--", Token::DecOp);
-    MapOperatorToken("!", Token::LogicalNotOp);
-    MapOperatorToken("~", Token::BitwiseNotOp);
-    MapOperatorToken("&&", Token::LogicalAndOp);
-    MapOperatorToken("||", Token::LogicalOrOp);
-    MapOperatorToken("&", Token::BitwiseAndOp);
-    MapOperatorToken("|", Token::BitwiseOrOp);
-    MapOperatorToken("^", Token::BitwiseXorOp);
-    MapOperatorToken("==", Token::EqualOp);
-    MapOperatorToken("!=", Token::NotEqualOp);
-    MapOperatorToken("<", Token::LessOp);
-    MapOperatorToken("<=", Token::LessOrEqualOp);
-    MapOperatorToken(">", Token::GreaterOp);
-    MapOperatorToken(">=", Token::GreaterOrEqualOp);
-    MapOperatorToken(".", Token::Dot);
-    MapOperatorToken(";", Token::Semicolon);
-    MapOperatorToken(":", Token::Colon);
-    MapOperatorToken("?", Token::Question);
+    for (int i = 0; i < OperatorTokenCount; ++i)
+        MapOperatorToken(OperatorTokens[i].source, i);
     
-    (void)MapKeywordToken;
+    for (int i = 0; i < KeywordTokenCount; ++i)
+        MapKeywordToken(KeywordTokens[i].source, i);
 }
 
 SourceFile LexSource(const char* file)
@@ -435,7 +482,26 @@ SourceFile LexSource(const char* file)
     std::cout << theEscapeSequences << '\n';
     
     while (reader.Read() && reader.errorMessage.empty())
+    {
+        switch (reader.lastSourceToken.tokenType)
+        {
+            case TokenType::StringLiteral:
+                reader.lastSourceToken.tokenIndex = result.strings.size();
+                result.strings.push_back(reader.buffer);
+                break;
+            case TokenType::CodePointLiteral:
+            case TokenType::Float32Literal:
+            case TokenType::Float64Literal:
+            case TokenType::SignedIntegerLiteral:
+            case TokenType::UnsignedIntegerLiteral:
+                reader.lastSourceToken.tokenIndex = result.literals.size();
+                result.literals.push_back(reader.literal);
+                break;
+            default: break;
+        }
+        
         result.sourceTokens.push_back(reader.lastSourceToken);
+    }
     
     if (!reader.errorMessage.empty())
     {
@@ -446,73 +512,29 @@ SourceFile LexSource(const char* file)
     return result;
 }
 
-const char* TokenName(Token token)
+const char* TokenTypeName(TokenType tokenType)
 {
-    const char* text;
-    
-    switch (token)
+    switch (tokenType)
     {
-        case Token::Identifier: text = "identifier"; break;
-        case Token::NumericLiteral: text = "numeric literal"; break;
-        case Token::StringLiteral: text = "string literal"; break;
-        case Token::CharacterLiteral: text = "character literal"; break;
-        case Token::Symbols: text = "symbols"; break;
-        case Token::Comment: text = "comment"; break;
-        case Token::Comma: text = "comma"; break;
-        case Token::OpenParen: text = "open parenthesis"; break;
-        case Token::CloseParen: text = "close parenthesis"; break;
-        case Token::OpenBracket: text = "open bracket"; break;
-        case Token::CloseBracket: text = "close bracket"; break;
-        case Token::OpenBrace: text = "open brace"; break;
-        case Token::CloseBrace: text = "close brace"; break;
-        case Token::AssignOp: text = "assignment operator"; break;
-        case Token::AddAssignOp: text = "addition assignment operator"; break;
-        case Token::SubAssignOp: text = "subtraction assignment operator"; break;
-        case Token::MultAssignOp: text = "multiplication assignment operator"; break;
-        case Token::DivAssignOp: text = "division assignment operator"; break;
-        case Token::ModAssignOp: text = "remainder assignment operator"; break;
-        case Token::AndAssignOp: text = "and assignment operator"; break;
-        case Token::OrAssignOp: text = "or assignment operator"; break;
-        case Token::XorAssignOp: text = "xor assignment operator"; break;
-        case Token::LeftShiftAssignOp: text = "left shift assignment operator"; break;
-        case Token::RightShiftAssignOp: text = "right shift assignment operator"; break;
-        case Token::AddOp: text = "addition operator"; break;
-        case Token::SubOp: text = "subtraction operator"; break;
-        case Token::MultOp: text = "multiplication operator"; break;
-        case Token::DivOp: text = "division operator"; break;
-        case Token::ModOp: text = "remainder operator"; break;
-        case Token::LeftShiftOp: text = "left shift operator"; break;
-        case Token::RightShiftOp: text = "right shift operator"; break;
-        case Token::IncOp: text = "increment operator"; break;
-        case Token::DecOp: text = "decrement operator"; break;
-        case Token::LogicalNotOp: text = "logical not operator"; break;
-        case Token::BitwiseNotOp: text = "bitwise not operator"; break;
-        case Token::LogicalAndOp: text = "logical and operator"; break;
-        case Token::LogicalOrOp: text = "logical or operator"; break;
-        case Token::BitwiseAndOp: text = "bitwise and operator"; break;
-        case Token::BitwiseOrOp: text = "bitwise or operator"; break;
-        case Token::BitwiseXorOp: text = "bitwise xor operator"; break;
-        case Token::EqualOp: text = "equality operator"; break;
-        case Token::NotEqualOp: text = "inequality operator"; break;
-        case Token::LessOp: text = "less than operator"; break;
-        case Token::LessOrEqualOp: text = "less than or equal to operator"; break;
-        case Token::GreaterOp: text = "greater than operator"; break;
-        case Token::GreaterOrEqualOp: text = "greater than or equal to operator"; break;
-        case Token::Dot: text = "dot"; break;
-        case Token::Semicolon: text = "semicolon"; break;
-        case Token::Colon: text = "colon"; break;
-        case Token::Question: text = "question mark"; break;
-        default: text = "unknown"; break;
+        case TokenType::None: return "none";
+        case TokenType::Comment: return "comment";
+        case TokenType::Identifier: return "identifier";
+        case TokenType::StringLiteral: return "string literal";
+        case TokenType::CodePointLiteral: return "code point literal";
+        case TokenType::Float32Literal: return "32-bit float literal";
+        case TokenType::Float64Literal: return "64-bit float literal";
+        case TokenType::SignedIntegerLiteral: return "signed integer literal";
+        case TokenType::UnsignedIntegerLiteral: return "unsigned integer literal";
+        case TokenType::Keyword: return "keyword";
+        case TokenType::Operator: return "operator";
+        default: return "unknown";
     }
-    
-    return text;
 }
 
-std::ostream& operator<<(std::ostream& stream, Token token)
+std::ostream& operator<<(std::ostream& stream, TokenType tokenType)
 {    
-    return stream << TokenName(token);
+    return stream << TokenTypeName(tokenType);
 }
-
 
 std::ostream& operator<<(std::ostream& stream, TextPosition position)
 {
@@ -524,9 +546,24 @@ std::ostream& operator<<(std::ostream& stream, const SourceFile& sourceFile)
     for (const auto& sourceToken : sourceFile.sourceTokens)
     {
         stream << sourceToken.textPosition
-            << ' ' << sourceToken.token
-            << " (" << sourceToken.length
-            << ") : ";
+            << ' ' << sourceToken.tokenType;
+        
+        if (sourceToken.tokenType == TokenType::Keyword)
+        {
+            stream
+                << " ("
+                << KeywordTokens[sourceToken.tokenIndex].description
+                << ")";
+        }
+        else if (sourceToken.tokenType == TokenType::Operator)
+        {
+            stream
+                << " ("
+                << OperatorTokens[sourceToken.tokenIndex].description
+                << ")";
+        }
+        
+        stream << " (" << sourceToken.length << ") : ";
         
         stream.write(
             sourceFile.source.data() + sourceToken.offset,
