@@ -126,6 +126,16 @@ static constexpr bool IsDigit(char c)
     return '0' <= c && c <= '9';
 }
 
+static constexpr bool IsUpperHex(char c)
+{
+    return 'A' <= c && c <= 'F';
+}
+
+static constexpr bool IsLowerHex(char c)
+{
+    return 'a' <= c && c <= 'f';
+}
+
 static constexpr bool IsUpper(char c)
 {
     return 'A' <= c && c <= 'Z';
@@ -149,6 +159,18 @@ static constexpr bool IsIdentifierSafe(char c)
 static inline bool IsStringLiteralSafe(char c)
 {
     return IsIdentifierSafe(c) || IsSymbol(c) || c == ' ';
+}
+
+static inline int ParseHex(char c)
+{
+    if (IsDigit(c))
+        return c - '0';
+    else if (IsUpperHex(c))
+        return c - 'A' + 10;
+    else if (IsLowerHex(c))
+        return c - 'a' + 10;
+    
+    return -1;
 }
 
 struct SourceReader
@@ -176,6 +198,11 @@ struct SourceReader
     char Previous()
     {
         return source[index - 1];
+    }
+    
+    int Gap()
+    {
+        return length - index;
     }
     
     void Advance()
@@ -245,28 +272,108 @@ struct SourceReader
         literal.asUInt64 = value;
     }
     
+    void ParseHexEscapeSequence()
+    {
+        if (Gap() > 1)
+        {
+            int hex = ParseHex(Next());
+            
+            if (hex >= 0)
+            {
+                Advance();
+                ++lastSourceToken.length;
+                
+                int total = hex;
+                hex = ParseHex(Next());
+                
+                while (hex >= 0 && Gap() > 1)
+                {
+                    Advance();
+                    ++lastSourceToken.length;
+                    
+                    total = total * 0x10 + hex;
+                    hex = ParseHex(Next());
+                }
+                
+                if (total > 255)
+                {
+                    errorPosition = lastSourceToken.textPosition;
+                    errorMessage = "escape sequence hex value out of range";
+                }
+                else
+                {
+                    buffer += (char)total;
+                }
+            }
+            else
+            {
+                errorPosition = lastSourceToken.textPosition;
+                errorMessage = "expected at least one hex digit (";
+                errorMessage += Next();
+                errorMessage += ") [";
+                errorMessage += buffer;
+                errorMessage += "]";
+            }
+        }
+        else
+        {
+            errorPosition = lastSourceToken.textPosition;
+            errorMessage = "found EOF; expected hex value";
+        }
+    }
+    
+    void ParseEscapeSequence()
+    {
+        ++index;
+        ++position.column;
+        
+        if (index < length)
+        {
+            ++lastSourceToken.length;
+            
+            switch (Current())
+            {
+                case '\'': buffer += '\''; break;
+                case '"': buffer += '"'; break;
+                case '?': buffer += '\?'; break;
+                case '\\': buffer += '\\'; break;
+                case 'a': buffer += '\a'; break;
+                case 'b': buffer += '\b'; break;
+                case 'f': buffer += '\f'; break;
+                case 'n': buffer += '\n'; break;
+                case 'r': buffer += '\r'; break;
+                case 't': buffer += '\t'; break;
+                case 'v': buffer += '\v'; break;
+                case 'x': ParseHexEscapeSequence(); break;
+                default:
+                    errorPosition = lastSourceToken.textPosition;
+                    errorMessage = "invalid escape sequence";
+                    break;
+            }
+            
+            Advance();
+        }
+        else
+        {
+            errorPosition = lastSourceToken.textPosition;
+            errorMessage = "found EOF; expected escape sequence";
+        }
+    }
+    
     void ParseStringLiteral()
     {
         StartToken();
         lastSourceToken.tokenType = TokenType::StringLiteral;
         buffer.clear();
         
-        while (index < length)
+        while (index < length && errorMessage.empty())
         {
             ++lastSourceToken.length;
             
             if (Current() == '\\')
             {
-                ++lastSourceToken.length;
-                
-                if (!IsEscapeSequence(Next()))
-                {
-                    errorPosition = lastSourceToken.textPosition;
-                    errorMessage = "invalid escape sequence";
-                    return;
-                }
-                
-                Advance();
+                ParseEscapeSequence();
+                continue;
             }
             else if (Current() == '"')
             {

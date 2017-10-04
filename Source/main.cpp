@@ -9,7 +9,7 @@ int main(int argc, char** argv)
     for (int i = 1; i < argc; ++i)
     {
         auto sourceFile = LexSource(argv[1]);
-        cout << sourceFile << "***\n";
+        //cout << sourceFile << "***\n";
         
         for (auto sourceToken : sourceFile.sourceTokens)
         {
@@ -23,8 +23,22 @@ int main(int argc, char** argv)
                     << sourceFile.literals[sourceToken.tokenIndex].asUInt64
                     << '\n';
             }
+            else if (sourceToken.tokenType == TokenType::StringLiteral)
+            {
+                cout << "string -- text ";
+                cout.write(
+                    sourceFile.source.data() + sourceToken.offset,
+                    sourceToken.length);
+                //cout << ' ' << sourceToken.tokenIndex << endl;
+                //continue;
+                cout << " parsed "
+                    << sourceFile.strings[sourceToken.tokenIndex]
+                    << '\n';
+            }
         }
     }
+    
+    cout << "asdf\x5eg\n";
     
     return 0;
 }

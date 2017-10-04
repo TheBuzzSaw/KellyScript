@@ -71,6 +71,6 @@ int main(int32 argc, int8** argv)
     Write('a', '\n');
     return 0;
     
-    Failure("\j");
+    Failure("asdf\x5eYes", "qwer\xfffff\x");
 }
 
