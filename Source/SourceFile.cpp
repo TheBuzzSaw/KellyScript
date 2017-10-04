@@ -1,17 +1,19 @@
 #include "SourceFile.hpp"
 #include "TinyString.hpp"
+#include "CString.hpp"
 #include "DataMap.hpp"
 #include <fstream>
 #include <sstream>
 #include <algorithm>
 
-static DataMap<TinyString<int>, Token> theTokensBySource;
+static DataMap<String4, Token> theTokensBySource;
+static DataMap<CString, Token> theTokensByKeyword;
 
 // Make sure these symbols are ascending order always!
 static char theSymbols[] = "!#$%&()*+,-./:;<=>?@[\\]^`{|}~";
 static char theEscapeSequences[] = "\"'?\\abfnrtv";
 
-static Token FindOperator(TinyString<int> source)
+static Token FindOperator(String4 source)
 {
     auto token = theTokensBySource.TryGetValue(source);
     return token ? *token : Token::None;
@@ -297,7 +299,7 @@ struct SourceReader
                 
             default:
             {
-                TinyString<int> tinySource = {};
+                String4 tinySource = {};
                 tinySource.Append(Previous());
                 lastSourceToken.token = FindOperator(tinySource);
                 
@@ -348,59 +350,67 @@ struct SourceReader
     }
 };
 
-static void MapToken(const char* source, Token token)
+static void MapOperatorToken(const char* source, Token token)
 {
-    TinyString<int> ts = {};
+    String4 ts = {};
     ts.Assign(source);
     theTokensBySource.Set(ts, token);
 }
 
+static void MapKeywordToken(const char* keyword, Token token)
+{
+    CString cs = {keyword};
+    theTokensByKeyword.Set(cs, token);
+}
+
 void PrepareLexer()
 {
-    MapToken(",", Token::Comma);
-    MapToken("(", Token::OpenParen);
-    MapToken(")", Token::CloseParen);
-    MapToken("[", Token::OpenBracket);
-    MapToken("]", Token::CloseBracket);
-    MapToken("{", Token::OpenBrace);
-    MapToken("}", Token::CloseBrace);
-    MapToken("=", Token::AssignOp);
-    MapToken("+=", Token::AddAssignOp);
-    MapToken("-=", Token::SubAssignOp);
-    MapToken("*=", Token::MultAssignOp);
-    MapToken("/=", Token::DivAssignOp);
-    MapToken("%=", Token::ModAssignOp);
-    MapToken("&=", Token::AndAssignOp);
-    MapToken("|=", Token::OrAssignOp);
-    MapToken("^=", Token::XorAssignOp);
-    MapToken("<<=", Token::LeftShiftAssignOp);
-    MapToken(">>=", Token::RightShiftAssignOp);
-    MapToken("+", Token::AddOp);
-    MapToken("-", Token::SubOp);
-    MapToken("*", Token::MultOp);
-    MapToken("/", Token::DivOp);
-    MapToken("%", Token::ModOp);
-    MapToken("<<", Token::LeftShiftOp);
-    MapToken(">>", Token::RightShiftOp);
-    MapToken("++", Token::IncOp);
-    MapToken("--", Token::DecOp);
-    MapToken("!", Token::LogicalNotOp);
-    MapToken("~", Token::BitwiseNotOp);
-    MapToken("&&", Token::LogicalAndOp);
-    MapToken("||", Token::LogicalOrOp);
-    MapToken("&", Token::BitwiseAndOp);
-    MapToken("|", Token::BitwiseOrOp);
-    MapToken("^", Token::BitwiseXorOp);
-    MapToken("==", Token::EqualOp);
-    MapToken("!=", Token::NotEqualOp);
-    MapToken("<", Token::LessOp);
-    MapToken("<=", Token::LessOrEqualOp);
-    MapToken(">", Token::GreaterOp);
-    MapToken(">=", Token::GreaterOrEqualOp);
-    MapToken(".", Token::Dot);
-    MapToken(";", Token::Semicolon);
-    MapToken(":", Token::Colon);
-    MapToken("?", Token::Question);
+    MapOperatorToken(",", Token::Comma);
+    MapOperatorToken("(", Token::OpenParen);
+    MapOperatorToken(")", Token::CloseParen);
+    MapOperatorToken("[", Token::OpenBracket);
+    MapOperatorToken("]", Token::CloseBracket);
+    MapOperatorToken("{", Token::OpenBrace);
+    MapOperatorToken("}", Token::CloseBrace);
+    MapOperatorToken("=", Token::AssignOp);
+    MapOperatorToken("+=", Token::AddAssignOp);
+    MapOperatorToken("-=", Token::SubAssignOp);
+    MapOperatorToken("*=", Token::MultAssignOp);
+    MapOperatorToken("/=", Token::DivAssignOp);
+    MapOperatorToken("%=", Token::ModAssignOp);
+    MapOperatorToken("&=", Token::AndAssignOp);
+    MapOperatorToken("|=", Token::OrAssignOp);
+    MapOperatorToken("^=", Token::XorAssignOp);
+    MapOperatorToken("<<=", Token::LeftShiftAssignOp);
+    MapOperatorToken(">>=", Token::RightShiftAssignOp);
+    MapOperatorToken("+", Token::AddOp);
+    MapOperatorToken("-", Token::SubOp);
+    MapOperatorToken("*", Token::MultOp);
+    MapOperatorToken("/", Token::DivOp);
+    MapOperatorToken("%", Token::ModOp);
+    MapOperatorToken("<<", Token::LeftShiftOp);
+    MapOperatorToken(">>", Token::RightShiftOp);
+    MapOperatorToken("++", Token::IncOp);
+    MapOperatorToken("--", Token::DecOp);
+    MapOperatorToken("!", Token::LogicalNotOp);
+    MapOperatorToken("~", Token::BitwiseNotOp);
+    MapOperatorToken("&&", Token::LogicalAndOp);
+    MapOperatorToken("||", Token::LogicalOrOp);
+    MapOperatorToken("&", Token::BitwiseAndOp);
+    MapOperatorToken("|", Token::BitwiseOrOp);
+    MapOperatorToken("^", Token::BitwiseXorOp);
+    MapOperatorToken("==", Token::EqualOp);
+    MapOperatorToken("!=", Token::NotEqualOp);
+    MapOperatorToken("<", Token::LessOp);
+    MapOperatorToken("<=", Token::LessOrEqualOp);
+    MapOperatorToken(">", Token::GreaterOp);
+    MapOperatorToken(">=", Token::GreaterOrEqualOp);
+    MapOperatorToken(".", Token::Dot);
+    MapOperatorToken(";", Token::Semicolon);
+    MapOperatorToken(":", Token::Colon);
+    MapOperatorToken("?", Token::Question);
+    
+    (void)MapKeywordToken;
 }
 
 SourceFile LexSource(const char* file)

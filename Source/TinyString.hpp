@@ -3,6 +3,7 @@
 
 #include <cstring>
 #include <iostream>
+#include <cstdint>
 
 template<typename T> union TinyString
 {
@@ -78,6 +79,9 @@ std::ostream& operator<<(std::ostream& stream, TinyString<T> ts)
 
     return stream;
 }
+
+using String4 = TinyString<int32_t>;
+using String8 = TinyString<int64_t>;
 
 #endif
 

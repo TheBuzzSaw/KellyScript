@@ -65,7 +65,9 @@ enum class Token
     Dot,
     Semicolon,
     Colon,
-    Question
+    Question,
+    
+    TokenCount
 };
 
 struct SourceToken
