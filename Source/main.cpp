@@ -1,5 +1,6 @@
 #include "SourceFile.hpp"
 #include <iostream>
+#include <string>
 using namespace std;
 
 int main(int argc, char** argv)
@@ -9,7 +10,7 @@ int main(int argc, char** argv)
     for (int i = 1; i < argc; ++i)
     {
         auto sourceFile = LexSource(argv[1]);
-        //cout << sourceFile << "***\n";
+        cout << sourceFile << "***\n";
         
         for (auto sourceToken : sourceFile.sourceTokens)
         {
@@ -39,6 +40,9 @@ int main(int argc, char** argv)
     }
     
     cout << "asdf\x5eg\n";
+    cout << "\nPRESS ENTER\n";
+    string junk;
+    getline(cin, junk);
     
     return 0;
 }
