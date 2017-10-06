@@ -255,21 +255,54 @@ struct SourceReader
             lastSourceToken.tokenIndex = tokenIndex;
         }
     }
-    
-    void ParseNumericLiteral()
+
+    void ParseFloatLiteral()
     {
+        lastSourceToken.tokenType = TokenType::Float64Literal;
+
+        while (index < length)
+        {
+            if (IsDigit(Current()))
+            {
+                ++lastSourceToken.length;
+                buffer += Current();
+                Advance();
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        literal.asFloat64 = stod(buffer);
+    }
+    
+    void ParseIntegerLiteral()
+    {
+        literal.asUInt64 = Current() - '0';
         StartToken();
         lastSourceToken.tokenType = TokenType::UnsignedIntegerLiteral;
-        uint64_t value = Previous() - '0';
         
-        while (index < length && IsDigit(Current()))
+        while (index < length)
         {
-            ++lastSourceToken.length;
-            value = value * 10 + (Current() - '0');
-            Advance();
+            if (IsDigit(Current()))
+            {
+                ++lastSourceToken.length;
+                literal.asUInt64 = literal.asUInt64 * 10 + (Current() - '0');
+                Advance();
+            }
+            else if (Current() == '.')
+            {
+                buffer.assign(source + lastSourceToken.offset, lastSourceToken.length++);
+                Advance();
+                ParseFloatLiteral();
+                break;
+            }
+            else
+            {
+                break;
+            }
         }
-        
-        literal.asUInt64 = value;
     }
     
     void ParseHexEscapeSequence()
@@ -399,28 +432,39 @@ struct SourceReader
     {
         StartToken();
         lastSourceToken.tokenType = TokenType::CodePointLiteral;
+        buffer.clear();
         
-        while (index < length)
+        while (index < length && errorMessage.empty())
         {
             ++lastSourceToken.length;
-            
-            if (Current() == '\\')
+
+            if (Current() == '\'')
             {
-                ++lastSourceToken.length;
-                Advance();
-                
-                (void)IsEscapeSequence;
-            }
-            else if (Current() == '\'')
-            {
+                if (buffer.size() > 1)
+                {
+                    errorMessage = "character literal may not contain multiple characters";
+                    errorPosition = lastSourceToken.textPosition;
+                }
+
                 Advance();
                 break;
             }
-            
-            literal.asCodePoint = Current();
-            
-            Advance();
+            else if (Current() == '\\')
+            {
+                ParseEscapeSequence();
+                continue;
+            }
+            else
+            {
+                buffer += Current();
+                Advance();
+            }
         }
+
+        if (buffer.size() < 1)
+            literal.asCodePoint = 0;
+        else
+            literal.asCodePoint = buffer[0];
     }
     
     void ParseLineComment()
@@ -530,7 +574,7 @@ struct SourceReader
             if (IsAlpha(c) || c == '_')
                 ParseIdentifier();
             else if (IsDigit(c))
-                ParseNumericLiteral();
+                ParseIntegerLiteral();
             else if (c == '"')
                 ParseStringLiteral();
             else if (c == '\'')

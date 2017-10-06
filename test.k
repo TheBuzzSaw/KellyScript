@@ -39,6 +39,7 @@ LowToHigh (int32 a, int32 b) to (int32 low, int32 high)
     // 500 lines later
     
     high = 12;
+    fun = -3.1415926535898;
 }
 
 func Average : (int32 a, int32 b) -> (int32 result)
@@ -71,6 +72,6 @@ int main(int32 argc, int8** argv)
     Write('a', '\n');
     return 0;
     
-    Failure("asdf\x5eYes", "qwer\xfffff\x");
+    Failure("asdf\x5eYes", 'a', 'g', '\v', 'go', "qwer\xfffff\x");
 }
 

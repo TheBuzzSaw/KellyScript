@@ -24,6 +24,16 @@ int main(int argc, char** argv)
                     << sourceFile.literals[sourceToken.tokenIndex].asUInt64
                     << '\n';
             }
+            else if (sourceToken.tokenType == TokenType::Float64Literal)
+            {
+                cout << "float -- text ";
+                cout.write(
+                    sourceFile.source.data() + sourceToken.offset,
+                    sourceToken.length);
+                cout << " parsed "
+                    << sourceFile.literals[sourceToken.tokenIndex].asFloat64
+                    << '\n';
+            }
             else if (sourceToken.tokenType == TokenType::StringLiteral)
             {
                 cout << "string -- text ";
@@ -40,6 +50,7 @@ int main(int argc, char** argv)
     }
     
     cout << "asdf\x5eg\n";
+    cout << (-5) << (-    5) << 'a' << '\n';
     cout << "\nPRESS ENTER\n";
     string junk;
     getline(cin, junk);
