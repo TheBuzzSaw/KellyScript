@@ -10,6 +10,14 @@ Also, despite the working title, this is not a scripting language. It is a progr
 * Use dot for everything. I'd much rather see `Package.Class.Member.Data.Stuff` than `Package::Class::Member.Data->Stuff`.
 * Proper array and slicing support. Tools (and people) can better reason about `int[]` than the traditional `int*, size_t` separation.
 
+## Unrefined Ideas
+
+These are concepts that need further exploration. They are not priorities in these early stages of development.
+
+* "Enum tables". I want to be able to more strongly associate other kinds of data with each enum value.
+* "Open enums and closed enums". Or maybe "loose enums and strict enums". A closed/strict enum would more carefully enforce that only valid values are set. This may only be feasible in a higher level language with more type constraints.
+* "Resources". Move-only polymorphic classes with constructors/destructors. Resources may contain structs, but structs may not contain resources. (Structs may contain resource pointers.)
+
 ### Safer Switch
 
 C/C++

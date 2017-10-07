@@ -1,4 +1,4 @@
-#include "SourceFile.hpp"
+#include "AbstractSyntaxTree.hpp"
 #include "Stopwatch.hpp"
 #include <iostream>
 #include <string>
@@ -51,6 +51,11 @@ int main(int argc, char** argv)
                     << '\n';
             }
         }
+
+        stopwatch.Restart();
+        Region region;
+        auto ast = Parse(sourceFile, region);
+        cout << "Parser completed in " << stopwatch.Seconds() << " seconds.\n";
     }
     
     cout << "asdf\x5eg\n";
