@@ -15,13 +15,15 @@ static char theEscapeSequences[] = "\"'?\\abfnrtv";
 
 static const TokenMeta KeywordTokens[] = {
     {"return", "return statement"},
-    };
+    {"to", "to statement"}};
 
 static constexpr int KeywordTokenCount =
     sizeof(KeywordTokens) / sizeof(*KeywordTokens);
 
 static const TokenMeta OperatorTokens[] = {
     {"!", "logical not operator"},
+    {"#", "pound operator"},
+    {"$", "dollar operator"},
     {"%", "remainder operator"},
     {"&", "bitwise and operator"},
     {"(", "open parenthesis"},
@@ -38,9 +40,12 @@ static const TokenMeta OperatorTokens[] = {
     {"=", "assignment operator"},
     {">", "greater than operator"},
     {"?", "question mark"},
+    {"@", "at symbol"},
     {"[", "open bracket"},
+    {"\\", "backslash"},
     {"]", "close bracket"},
     {"^", "bitwise xor operator"},
+    {"`", "backtick"},
     {"{", "open brace"},
     {"|", "bitwise or operator"},
     {"}", "close brace"},
@@ -158,7 +163,7 @@ static constexpr bool IsIdentifierSafe(char c)
 
 static inline bool IsStringLiteralSafe(char c)
 {
-    return IsIdentifierSafe(c) || IsSymbol(c) || c == ' ';
+    return IsIdentifierSafe(c) || IsSymbol(c) || c == ' ' || c == '\'';
 }
 
 static inline int ParseHex(char c)
@@ -613,6 +618,7 @@ void PrepareLexer()
 
 SourceFile LexSource(const char* file)
 {
+    (void)IsEscapeSequence;
     SourceFile result;
     result.file = file;
     result.source = FileToString(file);

@@ -5,3 +5,5 @@ obj/
 *.cbTemp
 *.bin
 
+debug.txt
+

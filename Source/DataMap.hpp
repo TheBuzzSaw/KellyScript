@@ -1,21 +1,11 @@
 #ifndef DATAMAP_HPP_KELLY
 #define DATAMAP_HPP_KELLY
 
+#include "View.hpp"
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <cassert>
-
-template<class T> struct View
-{
-    T* data;
-    int count;
-    
-    inline T* begin() const { return data; }
-    inline T* end() const { return data + count; }
-    
-    operator View<const T>() { return {data, count}; }
-};
 
 template<typename K, typename V> class DataMap
 {

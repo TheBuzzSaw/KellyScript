@@ -17,7 +17,7 @@ debug : CXXFLAGS += $(DEBUG_CXXFLAGS)
 debug : LDFLAGS += $(DEBUG_LDFLAGS)
 debug : $(TARGET)
 
-release : CXXFLAGS += -O2
+release : CXXFLAGS += -O2 -DNDEBUG
 release : $(TARGET)
 
 obj/%.o: Source/%.cpp

@@ -6,7 +6,7 @@
         {
             "taskName": "build-gcc",
             "type": "shell",
-            "command": "g++ -std=c++11 -g -o kelly-script.gcc.bin -fsanitize=address -fno-omit-frame-pointer Source/*.cpp",
+            "command": "g++ -std=c++11 -Wall -Werror -g -o kelly-script.gcc.bin -fsanitize=address -fno-omit-frame-pointer Source/*.cpp",
             "problemMatcher":"$gcc",
             "group": {
                 "kind": "build",

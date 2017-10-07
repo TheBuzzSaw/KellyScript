@@ -1,4 +1,5 @@
 #include "SourceFile.hpp"
+#include "Stopwatch.hpp"
 #include <iostream>
 #include <string>
 using namespace std;
@@ -9,7 +10,9 @@ int main(int argc, char** argv)
     PrepareLexer();
     for (int i = 1; i < argc; ++i)
     {
+        Stopwatch stopwatch;
         auto sourceFile = LexSource(argv[1]);
+        cout << "Lexer completed in " << stopwatch.Seconds() << " seconds.\n";
         cout << sourceFile << "***\n";
         
         for (auto sourceToken : sourceFile.sourceTokens)
