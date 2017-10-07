@@ -1,6 +1,7 @@
 #ifndef SourceFileHpp
 #define SourceFileHpp
 
+#include "Token.hpp"
 #include <vector>
 #include <string>
 #include <iostream>
@@ -10,27 +11,6 @@ struct TextPosition
 {
     int line;
     int column;
-};
-
-enum class TokenType
-{
-    None,
-    Comment,
-    Identifier,
-    StringLiteral,
-    CodePointLiteral,
-    Float32Literal,
-    Float64Literal,
-    SignedIntegerLiteral,
-    UnsignedIntegerLiteral,
-    Keyword,
-    Operator
-};
-
-struct TokenMeta
-{
-    const char* source;
-    const char* description;
 };
 
 struct SourceToken
@@ -60,10 +40,7 @@ struct SourceFile
     std::vector<std::string> strings;
 };
 
-void PrepareLexer();
 SourceFile LexSource(const char* file);
-const char* TokenTypeName(TokenType tokenType);
-std::ostream& operator<<(std::ostream& stream, TokenType tokenType);
 std::ostream& operator<<(std::ostream& stream, TextPosition position);
 std::ostream& operator<<(std::ostream& stream, const SourceFile& sourceFile);
 

@@ -7,7 +7,7 @@ using namespace std;
 int main(int argc, char** argv)
 {
     cout << "Version 0\n";
-    PrepareLexer();
+    PrepareTokens();
     for (int i = 1; i < argc; ++i)
     {
         Stopwatch stopwatch;
