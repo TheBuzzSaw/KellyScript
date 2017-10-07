@@ -181,13 +181,13 @@ static inline int ParseHex(char c)
 struct SourceReader
 {
     const char* source;
-    int index;
-    int length;
-    TextPosition position;
-    SourceToken lastSourceToken;
+    int index = 0;
+    int length = 0;
+    TextPosition position = {};
+    SourceToken lastSourceToken = {};
     std::string buffer;
     Literal literal;
-    TextPosition errorPosition;
+    TextPosition errorPosition = {};
     std::string errorMessage;
     
     char Current()
