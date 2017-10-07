@@ -2,6 +2,7 @@
 #include "DataMap.hpp"
 #include "CString.hpp"
 #include <iostream>
+#include <fstream>
 #include <algorithm>
 
 static DataMap<String4, int> theTokenIndicesBySymbols;
@@ -12,62 +13,64 @@ static char theSymbols[] = "!#$%&()*+,-./:;<=>?@[\\]^`{|}~";
 static char theEscapeSequences[] = "\"'?\\abfnrtv";
 
 static const TokenMeta KeywordTokens[] = {
-    {"return", "return statement"},
-    {"to", "to statement"}};
+    {"return", "'return' statement", "Return"},
+    {"to", "'to' operator", "To"},
+    {"import", "'import' directive", "Import"},
+    {"export", "'export' directive", "Export"}};
 
 static constexpr int KeywordTokenCount =
     sizeof(KeywordTokens) / sizeof(*KeywordTokens);
 
 static const TokenMeta OperatorTokens[] = {
-    {"!", "logical not operator"},
-    {"#", "pound operator"},
-    {"$", "dollar operator"},
-    {"%", "remainder operator"},
-    {"&", "bitwise and operator"},
-    {"(", "open parenthesis"},
-    {")", "close parenthesis"},
-    {"*", "multiplication operator"},
-    {"+", "addition operator"},
-    {",", "comma"},
-    {"-", "subtraction operator"},
-    {".", "dot"},
-    {"/", "division operator"},
-    {":", "colon"},
-    {";", "semicolon"},
-    {"<", "less than operator"},
-    {"=", "assignment operator"},
-    {">", "greater than operator"},
-    {"?", "question mark"},
-    {"@", "at symbol"},
-    {"[", "open bracket"},
-    {"\\", "backslash"},
-    {"]", "close bracket"},
-    {"^", "bitwise xor operator"},
-    {"`", "backtick"},
-    {"{", "open brace"},
-    {"|", "bitwise or operator"},
-    {"}", "close brace"},
-    {"~", "bitwise not operator"},
-    {"&&", "logical and operator"},
-    {"++", "increment operator"},
-    {"--", "decrement operator"},
-    {"<<", "left shift operator"},
-    {"!=", "inequality operator"},
-    {"%=", "remainder assignment operator"},
-    {"&=", "and assignment operator"},
-    {"*=", "multiplication assignment operator"},
-    {"+=", "addition assignment operator"},
-    {"-=", "subtraction assignment operator"},
-    {"/=", "division assignment operator"},
-    {"<=", "less than or equal to operator"},
-    {"==", "equality operator"},
-    {">=", "greater than or equal to operator"},
-    {"^=", "xor assignment operator"},
-    {"|=", "or assignment operator"},
-    {">>", "right shift operator"},
-    {"||", "logical or operator"},
-    {"<<=", "left shift assignment operator"},
-    {">>=", "right shift assignment operator"}};
+    {"!", "logical not operator", "Bang"},
+    {"#", "pound operator", "Pound"},
+    {"$", "dollar operator", "Dollar"},
+    {"%", "remainder operator", "Percent"},
+    {"&", "bitwise and operator", "Ampersand"},
+    {"(", "open parenthesis", "OpenParenthesis"},
+    {")", "close parenthesis", "CloseParenthesis"},
+    {"*", "multiplication operator", "Asterisk"},
+    {"+", "addition operator", "Plus"},
+    {",", "comma", "Comma"},
+    {"-", "subtraction operator", "Minus"},
+    {".", "dot", "Dot"},
+    {"/", "division operator", "Slash"},
+    {":", "colon", "Colon"},
+    {";", "semicolon", "Semicolon"},
+    {"<", "less than operator", "LessThan"},
+    {"=", "assignment operator", "Equal"},
+    {">", "greater than operator", "GreaterThan"},
+    {"?", "question mark", "Question"},
+    {"@", "at symbol", "At"},
+    {"[", "open bracket", "OpenBracket"},
+    {"\\", "backslash", "Backslash"},
+    {"]", "close bracket", "CloseBracket"},
+    {"^", "bitwise xor operator", "Caret"},
+    {"`", "backtick", "Backtick"},
+    {"{", "open brace", "OpenBrace"},
+    {"|", "bitwise or operator", "Pipe"},
+    {"}", "close brace", "CloseBrace"},
+    {"~", "bitwise not operator", "Tilde"},
+    {"&&", "logical and operator", "DoubleAmpersand"},
+    {"++", "increment operator", "DoublePlus"},
+    {"--", "decrement operator", "DoubleMinus"},
+    {"<<", "left shift operator", "LeftShift"},
+    {"!=", "inequality operator", "NotEqual"},
+    {"%=", "remainder assignment operator", "ModAssign"},
+    {"&=", "and assignment operator", "AndAssign"},
+    {"*=", "multiplication assignment operator", "MultAssign"},
+    {"+=", "addition assignment operator", "AddAssign"},
+    {"-=", "subtraction assignment operator", "SubAssign"},
+    {"/=", "division assignment operator", "DivAssign"},
+    {"<=", "less than or equal to operator", "LessThanOrEqualTo"},
+    {"==", "equality operator", "EqualTo"},
+    {">=", "greater than or equal to operator", "GreaterThanOrEqualTo"},
+    {"^=", "xor assignment operator", "XorAssign"},
+    {"|=", "or assignment operator", "OrAssign"},
+    {">>", "right shift operator", "RightShift"},
+    {"||", "logical or operator", "LogicalOr"},
+    {"<<=", "left shift assignment operator", "LeftShiftAssign"},
+    {">>=", "right shift assignment operator", "RightShiftAssign"}};
 
 static constexpr int OperatorTokenCount =
     sizeof(OperatorTokens) / sizeof(*OperatorTokens);
@@ -138,6 +141,31 @@ void PrepareTokens()
         theEscapeSequences,
         theEscapeSequences + sizeof(theEscapeSequences) - 1);
     std::cout << theEscapeSequences << '\n';
+}
+
+void GenerateSource()
+{
+    std::ofstream fout("token-source.txt", std::ofstream::binary);
+
+    auto intro = "constexpr int "; 
+
+    for (int i = 0; i < KeywordTokenCount; ++i)
+    {
+        fout << intro
+            << KeywordTokens[i].variable
+            << " = " << i << ";\n";
+    }
+
+    fout << "\n/// /// ///\n\n";
+
+    for (int i = 0; i < OperatorTokenCount; ++i)
+    {
+        fout << intro
+            << OperatorTokens[i].variable
+            << " = " << i << ";\n";
+    }
+
+    fout.close();
 }
 
 const char* TokenTypeName(TokenType tokenType)

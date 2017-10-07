@@ -4,6 +4,4 @@ obj/
 *.layout
 *.cbTemp
 *.bin
-
-debug.txt
-
+*.txt

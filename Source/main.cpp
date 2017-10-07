@@ -8,6 +8,7 @@ int main(int argc, char** argv)
 {
     cout << "Version 0\n";
     PrepareTokens();
+    GenerateSource();
     for (int i = 1; i < argc; ++i)
     {
         Stopwatch stopwatch;
