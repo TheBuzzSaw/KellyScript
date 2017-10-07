@@ -18,55 +18,6 @@ static std::string FileToString(const char* file)
     return std::string();
 }
 
-static constexpr bool IsSpace(char c)
-{
-    return
-        c == ' ' ||
-        c == '\r' ||
-        c == '\t' ||
-        c == '\n';
-}
-
-static constexpr bool IsDigit(char c)
-{
-    return '0' <= c && c <= '9';
-}
-
-static constexpr bool IsUpperHex(char c)
-{
-    return 'A' <= c && c <= 'F';
-}
-
-static constexpr bool IsLowerHex(char c)
-{
-    return 'a' <= c && c <= 'f';
-}
-
-static constexpr bool IsUpper(char c)
-{
-    return 'A' <= c && c <= 'Z';
-}
-
-static constexpr bool IsLower(char c)
-{
-    return 'a' <= c && c <= 'z';
-}
-
-static constexpr bool IsAlpha(char c)
-{
-    return IsUpper(c) || IsLower(c);
-}
-
-static constexpr bool IsIdentifierSafe(char c)
-{
-    return IsAlpha(c) || IsDigit(c) || c == '_';
-}
-
-static inline bool IsStringLiteralSafe(char c)
-{
-    return IsIdentifierSafe(c) || IsSymbol(c) || c == ' ' || c == '\'';
-}
-
 static inline int ParseHex(char c)
 {
     if (IsDigit(c))
@@ -157,7 +108,7 @@ struct SourceReader
 
         if (tokenIndex != -1)
         {
-            lastSourceToken.tokenType = TokenType::Keyword;
+            lastSourceToken.tokenType = TokenType::Reserved;
             lastSourceToken.tokenIndex = tokenIndex;
         }
     }
@@ -443,7 +394,7 @@ struct SourceReader
             {
                 String4 tinySource = {};
                 tinySource.Append(Previous());
-                lastSourceToken.tokenType = TokenType::Operator;
+                lastSourceToken.tokenType = TokenType::Reserved;
                 lastSourceToken.tokenIndex = FindOperator(tinySource);
                 
                 for (int i = index; i < length && IsSymbol(source[i]); ++i)
@@ -552,18 +503,11 @@ std::ostream& operator<<(std::ostream& stream, const SourceFile& sourceFile)
         stream << sourceToken.textPosition
             << ' ' << sourceToken.tokenType;
         
-        if (sourceToken.tokenType == TokenType::Keyword)
+        if (sourceToken.tokenType == TokenType::Reserved)
         {
             stream
                 << " ("
-                << KeywordToken(sourceToken.tokenIndex)->description
-                << ")";
-        }
-        else if (sourceToken.tokenType == TokenType::Operator)
-        {
-            stream
-                << " ("
-                << OperatorToken(sourceToken.tokenIndex)->description
+                << ReservedToken(sourceToken.tokenIndex)->description
                 << ")";
         }
         

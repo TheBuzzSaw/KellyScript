@@ -67,8 +67,7 @@ enum class TokenType
     Float64Literal,
     SignedIntegerLiteral,
     UnsignedIntegerLiteral,
-    Keyword,
-    Operator
+    Reserved
 };
 
 struct TokenMeta
@@ -78,8 +77,7 @@ struct TokenMeta
     const char* variable;
 };
 
-const TokenMeta* KeywordToken(int index);
-const TokenMeta* OperatorToken(int index);
+const TokenMeta* ReservedToken(int index);
 
 void PrepareTokens();
 void GenerateSource();
@@ -90,5 +88,54 @@ bool IsEscapeSequence(char c);
 
 const char* TokenTypeName(TokenType tokenType);
 std::ostream& operator<<(std::ostream& stream, TokenType tokenType);
+
+constexpr bool IsSpace(char c)
+{
+    return
+        c == ' ' ||
+        c == '\r' ||
+        c == '\t' ||
+        c == '\n';
+}
+
+constexpr bool IsDigit(char c)
+{
+    return '0' <= c && c <= '9';
+}
+
+constexpr bool IsUpperHex(char c)
+{
+    return 'A' <= c && c <= 'F';
+}
+
+constexpr bool IsLowerHex(char c)
+{
+    return 'a' <= c && c <= 'f';
+}
+
+constexpr bool IsUpper(char c)
+{
+    return 'A' <= c && c <= 'Z';
+}
+
+constexpr bool IsLower(char c)
+{
+    return 'a' <= c && c <= 'z';
+}
+
+constexpr bool IsAlpha(char c)
+{
+    return IsUpper(c) || IsLower(c);
+}
+
+constexpr bool IsIdentifierSafe(char c)
+{
+    return IsAlpha(c) || IsDigit(c) || c == '_';
+}
+
+inline bool IsStringLiteralSafe(char c)
+{
+    return IsIdentifierSafe(c) || IsSymbol(c) || c == ' ' || c == '\'';
+}
 
 #endif

@@ -12,16 +12,11 @@ static DataMap<CString, int> theTokenIndicesByKeyword;
 static char theSymbols[] = "!#$%&()*+,-./:;<=>?@[\\]^`{|}~";
 static char theEscapeSequences[] = "\"'?\\abfnrtv";
 
-static const TokenMeta KeywordTokens[] = {
+static const TokenMeta ReservedTokens[] = {
     {"return", "'return' statement", "Return"},
     {"to", "'to' operator", "To"},
     {"import", "'import' directive", "Import"},
-    {"export", "'export' directive", "Export"}};
-
-static constexpr int KeywordTokenCount =
-    sizeof(KeywordTokens) / sizeof(*KeywordTokens);
-
-static const TokenMeta OperatorTokens[] = {
+    {"export", "'export' directive", "Export"},
     {"!", "logical not operator", "Bang"},
     {"#", "pound operator", "Pound"},
     {"$", "dollar operator", "Dollar"},
@@ -72,17 +67,12 @@ static const TokenMeta OperatorTokens[] = {
     {"<<=", "left shift assignment operator", "LeftShiftAssign"},
     {">>=", "right shift assignment operator", "RightShiftAssign"}};
 
-static constexpr int OperatorTokenCount =
-    sizeof(OperatorTokens) / sizeof(*OperatorTokens);
+static constexpr int ReservedTokenCount =
+    sizeof(ReservedTokens) / sizeof(*ReservedTokens);
 
-const TokenMeta* KeywordToken(int index)
+const TokenMeta* ReservedToken(int index)
 {
-    return KeywordTokens + index;
-}
-
-const TokenMeta* OperatorToken(int index)
-{
-    return OperatorTokens + index;
+    return ReservedTokens + index;
 }
 
 int FindOperator(String4 source)
@@ -128,11 +118,13 @@ static void MapKeywordToken(const char* keyword, int index)
 
 void PrepareTokens()
 {
-    for (int i = 0; i < OperatorTokenCount; ++i)
-        MapOperatorToken(OperatorTokens[i].source, i);
-    
-    for (int i = 0; i < KeywordTokenCount; ++i)
-        MapKeywordToken(KeywordTokens[i].source, i);
+    for (int i = 0; i < ReservedTokenCount; ++i)
+    {
+        if (IsSymbol(ReservedTokens[i].source[0]))
+            MapOperatorToken(ReservedTokens[i].source, i);
+        else
+            MapKeywordToken(ReservedTokens[i].source, i);
+    }
     
     std::sort(theSymbols, theSymbols + sizeof(theSymbols) - 1);
     std::cout << theSymbols << '\n';
@@ -149,19 +141,10 @@ void GenerateSource()
 
     auto intro = "constexpr int "; 
 
-    for (int i = 0; i < KeywordTokenCount; ++i)
+    for (int i = 0; i < ReservedTokenCount; ++i)
     {
         fout << intro
-            << KeywordTokens[i].variable
-            << " = " << i << ";\n";
-    }
-
-    fout << "\n/// /// ///\n\n";
-
-    for (int i = 0; i < OperatorTokenCount; ++i)
-    {
-        fout << intro
-            << OperatorTokens[i].variable
+            << ReservedTokens[i].variable
             << " = " << i << ";\n";
     }
 
@@ -181,8 +164,7 @@ const char* TokenTypeName(TokenType tokenType)
         case TokenType::Float64Literal: return "64-bit float literal";
         case TokenType::SignedIntegerLiteral: return "signed integer literal";
         case TokenType::UnsignedIntegerLiteral: return "unsigned integer literal";
-        case TokenType::Keyword: return "keyword";
-        case TokenType::Operator: return "operator";
+        case TokenType::Reserved: return "reserved";
         default: return "unknown";
     }
 }
