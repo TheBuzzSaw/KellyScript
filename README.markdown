@@ -6,9 +6,21 @@ Also, despite the working title, this is not a scripting language. It is a progr
 
 ## Feature Ideas
 
-* Replace many macros with nicer system libraries. I wanna call something like `Compiler.CurrentLine` rather than `__LINE__`.
-* Use dot for everything. I'd much rather see `Package.Class.Member.Data.Stuff` than `Package::Class::Member.Data->Stuff`.
 * Proper array and slicing support. Tools (and people) can better reason about `int[]` than the traditional `int*, size_t` separation.
+* Eliminate `#include` and `#define`. Add a proper package/namespace system a la Java/C#.
+* Use dot operator for everything. No more `::` or `->` operators. (They can be moved to other purposes though.) I'd much rather see `Package.Class.Member.Data.Stuff` than `Package::Class::Member.Data->Stuff`.
+* Case statements break by default. Jumps or fallthrough must be explicit.
+* All variables initialize to default values. Add a keyword/operator to indicate no-initialization. This also applies to return statements.
+* Support multiple return values.
+* Lambda syntax closer to that of C#.
+* Explicitly support int32, int64, etc. Switch the vague int, long, etc. to aliases.
+* Support better metaprogramming. Stop invading the templating system with complexity.
+* Support pattern matching and optionals.
+* Drop exceptions.
+* If possible, eliminate the pointer-reference dichotomy. There should be one way to work with addresses.
+* Integrate proper span support. I'd rather specify `int[]` than `int*` and `size_t`.
+* Support reflection. Empower tools to (for example) auto serialize structs.
+* Instead of obscure macros, have a rich suite of compiler queries: `Compiler.CurrentLine`, `Compiler.CurrentFunction`, `Compiler.OperatingSystem`, etc.
 
 ### Unrefined Ideas
 
