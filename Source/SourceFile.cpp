@@ -481,6 +481,10 @@ SourceFile LexSource(const char* file)
         
         result.sourceTokens.push_back(reader.lastSourceToken);
     }
+
+    SourceToken finalToken = {};
+    finalToken.tokenType = TokenType::None;
+    result.sourceTokens.push_back(finalToken);
     
     if (!reader.errorMessage.empty())
     {

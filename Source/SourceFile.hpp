@@ -20,6 +20,13 @@ struct SourceToken
     TextPosition textPosition;
     TokenType tokenType;
     int tokenIndex;
+
+    bool IsReserved(int reservedIndex) const
+    {
+        return
+            tokenType == TokenType::Reserved &&
+            tokenIndex == reservedIndex;
+    }
 };
 
 union Literal

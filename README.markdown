@@ -31,6 +31,41 @@ These are concepts that need further exploration. They are not priorities in the
 * "Resources". Move-only polymorphic classes with constructors/destructors. Resources may contain structs, but structs may not contain resources. (Structs may contain resource pointers.)
 * C# has `IEnumerable<T>` at the core of its `foreach` technology. Is that feasible in KellyScript? Or does it introduce native-unfriendly overhead? Does it hinder optimization opportunities?
 
+### Unify pointer regions
+
+Since `int[]` references a runtime number of `int` values, perhaps the language should stay consistent and interpret `int[6]` as still a reference but with its range baked in at compile time. This means there needs to be new syntax to represent an array on the stack.
+
+    int32[] values = ObtainValues();
+    int32[3] header = values[0 to 3];
+
+    inline int32[7] stackArray; // Does this work?
+    int32 stackArray[7]; // Revert to C style for this case?
+    Array<int32, 3> GetVector() // Is there some new native type?
+
+This approach results in reverse accesses. (I believe this is why other languages opted for the `[a][b]values` syntax.)
+
+    int32[][5] values = ...; // 5 arrays of N integers.
+    values[1]; // Second array of N integers.
+
+    int32[5][] values = ...; // N arrays of 5 integers.
+    values[1]; // Second array of 5 integers.
+
+One problem with C pointers is that there is no indication of whether the pointer targets one value or multiple values. Maybe this is an opportunity to fold pointers that reference only one value into the array notation.
+
+    int32 value = 9;
+
+    int32[1] myPointer = &value;
+    int32 value2 = myPointer[0];
+
+    int32& myPointer = &value; // This could be shorthand for int32[1].
+    int32 value2 = *myPointer; // Shorthand for myPointer[0] ?
+
+The only time we need raw pointers to unknown quantities is for C interop.
+
+    // What else would I use the 0-length array for?
+    // This could indicate that this pointer has no bounds checking.
+    int32[0] myPointer = ThirdPartyPointer();
+
 ### Safer Switch
 
 C/C++
@@ -64,10 +99,6 @@ KellyScript
             Fun();
         }
     }
-
-## Challenges
-
-* Can we eliminate the pointer-reference dichotomy? Can pointers just be made nicer to work with?
 
 ## C++ Keywords
 
