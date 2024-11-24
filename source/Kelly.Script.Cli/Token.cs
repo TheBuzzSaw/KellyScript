@@ -98,7 +98,34 @@ public static class TokenExtensions
             }
             else
             {
-                token.Type = TokenType.IllegalCodePoint;
+                token.Type = (int)first switch
+                {
+                    '`' => TokenType.Grave,
+                    '~' => TokenType.Tilde,
+                    '!' => TokenType.Bang,
+                    '@' => TokenType.At,
+                    '#' => TokenType.Pound,
+                    '$' => TokenType.Dollar,
+                    '%' => TokenType.Percent,
+                    '^' => TokenType.Caret,
+                    '&' => TokenType.Ampersand,
+                    '*' => TokenType.Asterisk,
+                    '(' => TokenType.OpenParen,
+                    ')' => TokenType.CloseParen,
+                    '-' => TokenType.Minus,
+                    '+' => TokenType.Plus,
+                    '=' => TokenType.Equals,
+                    '[' => TokenType.OpenBracket,
+                    ']' => TokenType.CloseBracket,
+                    '{' => TokenType.OpenBrace,
+                    '}' => TokenType.CloseBrace,
+                    '.' => TokenType.Dot,
+                    ',' => TokenType.Comma,
+                    '/' => TokenType.Slash,
+                    ':' => TokenType.Colon,
+                    ';' => TokenType.Semicolon,
+                    _ => TokenType.IllegalCodePoint
+                };
             }
         }
 
