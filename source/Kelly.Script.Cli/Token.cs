@@ -25,7 +25,7 @@ public static class TokenExtensions
 {
     private static readonly SearchValues<byte> Whitespace = SearchValues.Create(" \t\r\n"u8);
 
-    public static ref SpanReader<byte> ParseToken(
+    public static void ParseToken(
         ref this SpanReader<byte> reader,
         ref int line,
         ref int column,
@@ -61,7 +61,7 @@ public static class TokenExtensions
                     column = 1;
                 }
 
-                while (reader.HasMore && Whitespace.Contains(reader.Peek()))
+                while (Whitespace.Contains(reader.PeekOrDefault()))
                 {
                     ++token.Length;
 
@@ -128,7 +128,5 @@ public static class TokenExtensions
                 };
             }
         }
-
-        return ref reader;
     }
 }

@@ -1,26 +1,529 @@
 using System;
+using System.Buffers;
+using System.Buffers.Binary;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Kelly.Script.Cli;
 
 public ref struct SpanReader<T>
 {
-    public ReadOnlySpan<T> Span;
+    public readonly ReadOnlySpan<T> Span;
     public int Position;
 
+    public readonly ReadOnlySpan<T> Pending => Span.Slice(Position);
+    public readonly ReadOnlySpan<T> Consumed => Span.Slice(0, Position);
+    public readonly int RemainingCount => Span.Length - Position;
+    public readonly bool WasConsumed => Span.Length <= Position;
     public readonly bool HasMore => Position < Span.Length;
-    public readonly ReadOnlySpan<T> Consumed => Span[..Position];
-    public readonly ReadOnlySpan<T> Remaining => Span[Position..];
+
+    public SpanReader(ReadOnlySpan<T> span) => Span = span;
 }
 
 public static class SpanReader
 {
-    public static SpanReader<T> ToReader<T>(this Span<T> span) => new() { Span = span };
-    public static SpanReader<T> ToReader<T>(this T[]? array) => new() { Span = array };
-    public static T Peek<T>(ref this SpanReader<T> reader) => reader.Span[reader.Position];
+    public static SpanReader<T> Create<T>(ReadOnlySpan<T> span) => new(span);
+    public static SpanReader<T> Create<T>(Span<T> span) => new(span);
+    public static SpanReader<T> Create<T>(ReadOnlyMemory<T> memory) => new(memory.Span);
+    public static SpanReader<T> Create<T>(Memory<T> memory) => new(memory.Span);
+    public static SpanReader<T> Create<T>(T[]? array) => new(array);
+    public static SpanReader<T> Create<T>(ImmutableArray<T> immutableArray) => new(immutableArray.AsSpan());
+    public static SpanReader<T> Create<T>(ArraySegment<T> segment) => new(segment);
+    public static SpanReader<T> Create<T>(List<T>? list) => new(CollectionsMarshal.AsSpan(list));
+    public static SpanReader<char> Create(string? text) => new(text);
+
     public static T Chomp<T>(ref this SpanReader<T> reader)
+    {
+        var result = reader.Peek();
+        ++reader.Position;
+        return result;
+    }
+
+    public static T Peek<T>(ref this SpanReader<T> reader) => reader.Span[reader.Position];
+
+    public static T PeekOrDefault<T>(
+        ref this SpanReader<T> reader,
+        T defaultValue = default) where T : struct
+    {
+        if (reader.WasConsumed)
+            return defaultValue;
+        var result = reader.Peek();
+        return result;
+    }
+
+    public static bool TryCreate<T>(IEnumerable<T>? enumerable, out SpanReader<T> reader)
+    {
+        if (TryGetSpan(enumerable, out var span))
+        {
+            reader = new(span);
+            return true;
+        }
+        else
+        {
+            reader = default;
+            return false;
+        }
+    }
+
+    public static bool TryGetSpan<T>(
+        [NotNullWhen(true)] IEnumerable<T>? enumerable,
+        out ReadOnlySpan<T> span)
+    {
+        if (enumerable is null)
+        {
+            span = default;
+            return false;
+        }
+
+        if (enumerable is T[] array)
+        {
+            span = array;
+            return true;
+        }
+
+        if (enumerable is List<T> list)
+        {
+            span = CollectionsMarshal.AsSpan(list);
+            return true;
+        }
+
+        if (enumerable is ArraySegment<T> arraySegment)
+        {
+            span = arraySegment;
+            return true;
+        }
+
+        if (enumerable is ImmutableArray<T> immutableArray)
+        {
+            span = immutableArray.AsSpan();
+            return true;
+        }
+
+        if (typeof(T) == typeof(char) && enumerable is string s)
+        {
+            var charSpan = s.AsSpan();
+            span = Unsafe.As<ReadOnlySpan<char>, ReadOnlySpan<T>>(ref charSpan);
+            return true;
+        }
+
+        span = default;
+        return false;
+    }
+
+    public static ReadOnlySpan<char> ReadWord(ReadOnlySpan<char> span)
+    {
+        var trimmed = span.Trim();
+        var space = trimmed.IndexOf(' ');
+        var result = space == -1 ? trimmed : trimmed[..space];
+        return result;
+    }
+
+    public static ReadOnlySpan<char> ReadWord(ref this SpanReader<char> reader)
+    {
+        reader.SkipAll(' ');
+        var pending = reader.Pending;
+        var space = pending.IndexOf(' ');
+        if (space == -1)
+        {
+            var result = pending;
+            reader.Position += pending.Length;
+            return result;
+        }
+        else
+        {
+            var result = pending.Slice(0, space);
+            reader.Position += space + 1;
+            return result;
+        }
+    }
+
+    public static void SkipAll<T>(
+        ref this SpanReader<T> reader,
+        T item
+    ) where T : IEquatable<T>
+    {
+        var index = reader.Pending.IndexOfAnyExcept(item);
+        if (index == -1)
+            reader.Position = reader.Span.Length;
+        else
+            reader.Position += index;
+    }
+
+    public static void SkipAll<T>(
+        ref this SpanReader<T> reader,
+        ReadOnlySpan<T> items
+    ) where T : IEquatable<T>
+    {
+        var index = reader.Pending.IndexOfAnyExcept(items);
+        if (index == -1)
+            reader.Position = reader.Span.Length;
+        else
+            reader.Position += index;
+    }
+
+    public static void SkipAll<T>(
+        ref this SpanReader<T> reader,
+        SearchValues<T> items
+    ) where T : IEquatable<T>
+    {
+        var index = reader.Pending.IndexOfAnyExcept(items);
+        if (index == -1)
+            reader.Position = reader.Span.Length;
+        else
+            reader.Position += index;
+    }
+
+    public static bool TryMatch<T>(
+        ref this SpanReader<T> reader,
+        T value
+    ) where T : IEquatable<T>
+    {
+        if (reader.Position < reader.Span.Length && reader.Span[reader.Position].Equals(value))
+        {
+            ++reader.Position;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public static bool TryMatch<T>(
+        ref this SpanReader<T> reader,
+        ReadOnlySpan<T> values
+        ) where T : IEquatable<T>
+    {
+        if (reader.Pending.StartsWith(values))
+        {
+            reader.Position += values.Length;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public static bool TryMatchBytes<T>(
+        ref this SpanReader<byte> reader,
+        in T value
+    ) where T : unmanaged
+    {
+        var bytes = MemoryMarshal.AsBytes(
+            new ReadOnlySpan<T>(in value));
+        if (reader.Pending.StartsWith(bytes))
+        {
+            reader.Position += bytes.Length;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public static bool TryMatchBytes<T>(
+        ref this SpanReader<byte> reader,
+        ReadOnlySpan<T> values
+    ) where T : unmanaged
+    {
+        var bytes = MemoryMarshal.AsBytes(values);
+        if (reader.Pending.StartsWith(bytes))
+        {
+            reader.Position += bytes.Length;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public static bool TryTake<T>(
+        ref this SpanReader<T> reader,
+        out T? item)
+    {
+        var pending = reader.Pending;
+        if (pending.IsEmpty)
+        {
+            item = default;
+            return false;
+        }
+        else
+        {
+            item = pending[0];
+            ++reader.Position;
+            return true;
+        }
+    }
+
+    public static bool TryTake<T>(
+        ref this SpanReader<T> reader,
+        Span<T> items)
+    {
+        var pending = reader.Pending;
+        if (items.Length <= pending.Length)
+        {
+            pending.Slice(0, items.Length).CopyTo(items);
+            reader.Position += items.Length;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public static bool TrySlice<T>(
+        ref this SpanReader<T> reader,
+        int length,
+        out ReadOnlySpan<T> result)
+    {
+        var pending = reader.Pending;
+        if (length < 0 || pending.Length < length)
+        {
+            result = default;
+            return false;
+        }
+        else
+        {
+            reader.Position += length;
+            result = pending[..length];
+            return true;
+        }
+    }
+
+    public static T Take<T>(ref this SpanReader<T> reader)
     {
         var result = reader.Span[reader.Position];
         ++reader.Position;
         return result;
+    }
+
+    public static void Take<T>(ref this SpanReader<T> reader, Span<T> items)
+    {
+        reader.Span.Slice(reader.Position, items.Length).CopyTo(items);
+        reader.Position += items.Length;
+    }
+
+    public static T Blit<T>(ref this SpanReader<byte> reader) where T : unmanaged
+    {
+        var value = MemoryMarshal.Read<T>(reader.Pending);
+        reader.Position += Unsafe.SizeOf<T>();
+        return value;
+    }
+
+    public static bool TryBlit<T>(
+        ref this SpanReader<byte> reader,
+        out T value
+    ) where T : unmanaged
+    {
+        if (MemoryMarshal.TryRead(reader.Pending, out value))
+        {
+            reader.Position += Unsafe.SizeOf<T>();
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public static bool TryBlit<T>(
+        ref this SpanReader<byte> reader,
+        Span<T> values
+    ) where T : unmanaged
+    {
+        var bytes = MemoryMarshal.AsBytes(values);
+        if (bytes.Length <= reader.RemainingCount)
+        {
+            reader.Pending.Slice(0, bytes.Length).CopyTo(bytes);
+            reader.Position += bytes.Length;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public static bool TryReadBigEndianInt32(
+        ref this SpanReader<byte> reader,
+        out int result)
+    {
+        if (reader.TryBlit<int>(out var bigEndianValue))
+        {
+            result = BitConverter.IsLittleEndian ?
+                BinaryPrimitives.ReverseEndianness(bigEndianValue) :
+                bigEndianValue;
+            return true;
+        }
+        else
+        {
+            result = default;
+            return false;
+        }
+    }
+
+    public static int ReadBigEndianInt32(
+        ref this SpanReader<byte> reader)
+    {
+        var bigEndianValue = reader.Blit<int>();
+        var result = BitConverter.IsLittleEndian ?
+            BinaryPrimitives.ReverseEndianness(bigEndianValue) :
+            bigEndianValue;
+        return result;
+    }
+
+    public static bool TryReadBigEndianUInt32(
+        ref this SpanReader<byte> reader,
+        out uint result)
+    {
+        if (reader.TryBlit(out uint bigEndianValue))
+        {
+            result = BitConverter.IsLittleEndian ?
+                BinaryPrimitives.ReverseEndianness(bigEndianValue) :
+                bigEndianValue;
+            return true;
+        }
+        else
+        {
+            result = default;
+            return false;
+        }
+    }
+
+    public static uint ReadBigEndianUInt32(
+        ref this SpanReader<byte> reader)
+    {
+        var bigEndianValue = reader.Blit<uint>();
+        var result = BitConverter.IsLittleEndian ?
+            BinaryPrimitives.ReverseEndianness(bigEndianValue) :
+            bigEndianValue;
+        return result;
+    }
+
+    public static bool TryReadUtf32(ref this SpanReader<char> reader, out int utf32)
+    {
+        if (reader.Span.Length <= reader.Position)
+        {
+            utf32 = 0;
+            return false;
+        }
+
+        if (char.IsHighSurrogate(reader.Span[reader.Position]))
+        {
+            if (reader.Position + 1 < reader.Span.Length &&
+                char.IsLowSurrogate(reader.Span[reader.Position + 1]))
+            {
+                utf32 = char.ConvertToUtf32(
+                    reader.Span[reader.Position],
+                    reader.Span[reader.Position + 1]);
+                reader.Position += 2;
+                return true;
+            }
+            else
+            {
+                utf32 = 0;
+                return false;
+            }
+        }
+        else
+        {
+            utf32 = reader.Span[reader.Position++];
+            return true;
+        }
+    }
+
+    public static Rune DecodeRuneFromUtf16(ref this SpanReader<char> reader)
+    {
+        var result = Rune.DecodeFromUtf16(
+            reader.Pending,
+            out var rune,
+            out var charsConsumed);
+        if (result != OperationStatus.Done)
+            throw new InvalidOperationException("Unable to decode rune: " + result);
+        reader.Position += charsConsumed;
+        return rune;
+    }
+
+    public static bool TryDecodeRuneFromUtf16(ref this SpanReader<char> reader, out Rune rune)
+    {
+        var result = Rune.DecodeFromUtf16(
+            reader.Pending,
+            out rune,
+            out var charsConsumed);
+        if (result != OperationStatus.Done)
+            return false;
+        reader.Position += charsConsumed;
+        return true;
+    }
+
+    public static Rune DecodeRuneFromUtf8(ref this SpanReader<byte> reader)
+    {
+        var result = Rune.DecodeFromUtf8(
+            reader.Pending,
+            out var rune,
+            out var bytesConsumed);
+        if (result != OperationStatus.Done)
+            throw new InvalidOperationException("Unable to decode rune: " + result);
+        reader.Position += bytesConsumed;
+        return rune;
+    }
+
+    public static bool TryDecodeRuneFromUtf8(ref this SpanReader<byte> reader, out Rune rune)
+    {
+        var result = Rune.DecodeFromUtf8(
+            reader.Pending,
+            out rune,
+            out var bytesConsumed);
+        if (result != OperationStatus.Done)
+            return false;
+        reader.Position += bytesConsumed;
+        return true;
+    }
+
+    public static int MoveToPreviousCodePoint(ReadOnlySpan<char> span, int index)
+    {
+        if (char.IsLowSurrogate(span[index - 1]))
+        {
+            var result = index - 2;
+            if (result < 0 || !char.IsHighSurrogate(span[result]))
+                throw new InvalidOperationException($"Missing high surrogate at index {result}.");
+            return result;
+        }
+        else if (char.IsHighSurrogate(span[index - 1]))
+        {
+            if (index == span.Length || !char.IsLowSurrogate(span[index]))
+                throw new InvalidOperationException($"Missing low surrogate at index {index}.");
+            return MoveToPreviousCodePoint(span, index - 1);
+        }
+        else
+        {
+            return index - 1;
+        }
+    }
+
+    public static int MoveToNextCodePoint(ReadOnlySpan<char> span, int index)
+    {
+        if (char.IsHighSurrogate(span[index]))
+        {
+            var i = index + 1;
+            if (i == span.Length || !char.IsLowSurrogate(span[i]))
+                throw new InvalidOperationException($"Missing low surrogate at index {i}.");
+            return index + 2;
+        }
+        else if (char.IsLowSurrogate(span[index]))
+        {
+            if (index == 0 || !char.IsHighSurrogate(span[index - 1]))
+                throw new InvalidOperationException($"Missing high surrogate at index {index - 1}.");
+        }
+
+        return index + 1;
     }
 }

@@ -11,9 +11,10 @@ internal class Program
         try
         {
             var path = args[0];
+            var x = args  .  Length;
             Console.WriteLine($"Tokenizing {path}");
             var code = File.ReadAllBytes(path);
-            var reader = code.ToReader();
+            var reader = SpanReader.Create(code);
             int line = 1;
             int column = 1;
             while (true)
