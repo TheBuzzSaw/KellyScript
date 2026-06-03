@@ -10,6 +10,14 @@ internal class Program
     {
         try
         {
+            if (args.Length == 0)
+            {
+                var m = OperatorPrecedence.CreateMapping();
+                foreach (var pair in m)
+                    Console.WriteLine(pair.ToString());
+                return;
+            }
+
             var path = args[0];
             var x = args  .  Length;
             Console.WriteLine($"Tokenizing {path}");
@@ -19,7 +27,7 @@ internal class Program
             int column = 1;
             while (true)
             {
-                reader.ParseToken(ref line, ref column, out var token);
+                var token = reader.ReadToken(ref line, ref column);
                 if (token.Type == TokenType.Eof)
                     break;
                 if (token.Type != TokenType.Gap)

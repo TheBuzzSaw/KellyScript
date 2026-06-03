@@ -25,15 +25,14 @@ public static class TokenExtensions
 {
     private static readonly SearchValues<byte> Whitespace = SearchValues.Create(" \t\r\n"u8);
 
-    public static void ParseToken(
+    public static Token ReadToken(
         ref this SpanReader<byte> reader,
         ref int line,
-        ref int column,
-        out Token token)
+        ref int column)
     {
         if (!reader.HasMore)
         {
-            token = new Token
+            return new Token
             {
                 Type = TokenType.Eof,
                 Start = reader.Span.Length,
@@ -42,91 +41,91 @@ public static class TokenExtensions
                 Column = column
             };
         }
-        else
+
+        var result = new Token
         {
-            token = new Token
+            Start = reader.Position,
+            Length = 1,
+            Line = line,
+            Column = column++
+        };
+        var first = reader.Chomp();
+        if (Whitespace.Contains(first))
+        {
+            result.Type = TokenType.Gap;
+            if (first == '\n')
             {
-                Start = reader.Position,
-                Length = 1,
-                Line = line,
-                Column = column++
-            };
-            var first = reader.Chomp();
-            if (Whitespace.Contains(first))
+                ++line;
+                column = 1;
+            }
+
+            while (Whitespace.Contains(reader.PeekOrDefault()))
             {
-                token.Type = TokenType.Gap;
-                if (first == '\n')
+                ++result.Length;
+
+                if (reader.Chomp() == '\n')
                 {
                     ++line;
                     column = 1;
                 }
-
-                while (Whitespace.Contains(reader.PeekOrDefault()))
+                else
                 {
-                    ++token.Length;
-
-                    if (reader.Chomp() == '\n')
-                    {
-                        ++line;
-                        column = 1;
-                    }
-                    else
-                    {
-                        ++column;
-                    }
-                }
-            }
-            else if (first == '_' || Token.IsAlpha(first))
-            {
-                token.Type = TokenType.Identifier;
-                while (reader.HasMore && Token.IsIdentifierFriendly(reader.Peek()))
-                {
-                    ++reader.Position;
-                    ++token.Length;
                     ++column;
                 }
-            }
-            else if (Token.IsDigit(first))
-            {
-                token.Type = TokenType.Integer;
-                while (reader.HasMore && Token.IsDigit(reader.Peek()))
-                {
-                    ++reader.Position;
-                    ++token.Length;
-                    ++column;
-                }
-            }
-            else
-            {
-                token.Type = (int)first switch
-                {
-                    '`' => TokenType.Grave,
-                    '~' => TokenType.Tilde,
-                    '!' => TokenType.Bang,
-                    '@' => TokenType.At,
-                    '#' => TokenType.Pound,
-                    '$' => TokenType.Dollar,
-                    '%' => TokenType.Percent,
-                    '^' => TokenType.Caret,
-                    '&' => TokenType.Ampersand,
-                    '*' => TokenType.Asterisk,
-                    '(' => TokenType.OpenParen,
-                    ')' => TokenType.CloseParen,
-                    '-' => TokenType.Minus,
-                    '+' => TokenType.Plus,
-                    '=' => TokenType.Equals,
-                    '[' => TokenType.OpenBracket,
-                    ']' => TokenType.CloseBracket,
-                    '{' => TokenType.OpenBrace,
-                    '}' => TokenType.CloseBrace,
-                    '.' => TokenType.Dot,
-                    ',' => TokenType.Comma,
-                    '/' => TokenType.Slash,
-                    ':' => TokenType.Colon,
-                    ';' => TokenType.Semicolon,
-                    _ => TokenType.IllegalCodePoint
-                };
             }
         }
+        else if (first == '_' || Token.IsAlpha(first))
+        {
+            result.Type = TokenType.Identifier;
+            while (reader.HasMore && Token.IsIdentifierFriendly(reader.Peek()))
+            {
+                ++reader.Position;
+                ++result.Length;
+                ++column;
+            }
+        }
+        else if (Token.IsDigit(first))
+        {
+            result.Type = TokenType.Integer;
+            while (reader.HasMore && Token.IsDigit(reader.Peek()))
+            {
+                ++reader.Position;
+                ++result.Length;
+                ++column;
+            }
+        }
+        else
+        {
+            result.Type = (int)first switch
+            {
+                '`' => TokenType.Grave,
+                '~' => TokenType.Tilde,
+                '!' => TokenType.Bang,
+                '@' => TokenType.At,
+                '#' => TokenType.Pound,
+                '$' => TokenType.Dollar,
+                '%' => TokenType.Percent,
+                '^' => TokenType.Caret,
+                '&' => TokenType.Ampersand,
+                '*' => TokenType.Asterisk,
+                '(' => TokenType.OpenParen,
+                ')' => TokenType.CloseParen,
+                '-' => TokenType.Minus,
+                '+' => TokenType.Plus,
+                '=' => TokenType.Equals,
+                '[' => TokenType.OpenBracket,
+                ']' => TokenType.CloseBracket,
+                '{' => TokenType.OpenBrace,
+                '}' => TokenType.CloseBrace,
+                '.' => TokenType.Dot,
+                ',' => TokenType.Comma,
+                '/' => TokenType.Slash,
+                ':' => TokenType.Colon,
+                ';' => TokenType.Semicolon,
+                _ => TokenType.IllegalCodePoint
+            };
+        }
+
+        return result;
     }
 }
