@@ -12,9 +12,12 @@ internal class Program
         {
             if (args.Length == 0)
             {
-                var m = OperatorPrecedence.CreateMapping();
-                foreach (var pair in m)
-                    Console.WriteLine(pair.ToString());
+                var op = OperatorInfo.Create();
+                foreach (var info in op.BinaryOperatorInfoBySyntax.Values)
+                {
+                    var a = op.IsLeftToRight(info.Precedence) ? "left-to-right" : "right-to-left";
+                    Console.WriteLine($"{info} : {a}");
+                }
                 return;
             }
 
