@@ -3,7 +3,7 @@ using System.Buffers;
 
 namespace Kelly.Script.Cli;
 
-public struct Token
+struct Token
 {
     public TokenType Type;
     public int Start;
@@ -21,14 +21,15 @@ public struct Token
     public static bool IsIdentifierFriendly(int c) => c == '_' || IsAlphanumeric(c);
 }
 
-public static class TokenExtensions
+static class TokenExtensions
 {
     private static readonly SearchValues<byte> Whitespace = SearchValues.Create(" \t\r\n"u8);
 
     public static Token ReadToken(
         ref this SpanReader<byte> reader,
         ref int line,
-        ref int column)
+        ref int column,
+        OperatorIndex operatorIndex)
     {
         if (!reader.HasMore)
         {
@@ -96,34 +97,40 @@ public static class TokenExtensions
         }
         else
         {
-            result.Type = (int)first switch
+            var tt = (int)first switch
             {
-                '`' => TokenType.Grave,
-                '~' => TokenType.Tilde,
-                '!' => TokenType.Bang,
-                '@' => TokenType.At,
-                '#' => TokenType.Pound,
-                '$' => TokenType.Dollar,
-                '%' => TokenType.Percent,
-                '^' => TokenType.Caret,
-                '&' => TokenType.Ampersand,
-                '*' => TokenType.Asterisk,
                 '(' => TokenType.OpenParen,
                 ')' => TokenType.CloseParen,
-                '-' => TokenType.Minus,
-                '+' => TokenType.Plus,
-                '=' => TokenType.Equals,
                 '[' => TokenType.OpenBracket,
                 ']' => TokenType.CloseBracket,
                 '{' => TokenType.OpenBrace,
                 '}' => TokenType.CloseBrace,
-                '.' => TokenType.Dot,
-                ',' => TokenType.Comma,
-                '/' => TokenType.Slash,
-                ':' => TokenType.Colon,
-                ';' => TokenType.Semicolon,
-                _ => TokenType.IllegalCodePoint
+                _ => TokenType.None
             };
+
+            if (tt != TokenType.None)
+            {
+                result.Type = tt;
+                result.Length = 1;
+            }
+            else
+            {
+                var pending = reader.Pending;
+                var matchLength = 0;
+                result.Type = TokenType.IllegalCodePoint;
+                foreach (var bo in operatorIndex.BinaryOperators)
+                {
+                    var syntax = bo.SyntaxUtf8;
+                    if (matchLength <= syntax.Length && pending.StartsWith(syntax))
+                    {
+                        matchLength = syntax.Length;
+                        result.Type = bo.Token;
+                    }
+                }
+
+                reader.Position += matchLength;
+                result.Length = matchLength;
+            }
         }
 
         return result;

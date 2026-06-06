@@ -73,5 +73,6 @@ int main(int32 argc, int8** argv)
     return 0;
     
     Failure("asdf\x5eYes", 'a', 'g', '\v', 'go', "qwer\xfffff\x");
-}
+    []
+} {}
 
