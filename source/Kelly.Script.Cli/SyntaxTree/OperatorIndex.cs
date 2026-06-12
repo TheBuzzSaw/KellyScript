@@ -11,8 +11,8 @@ sealed class OperatorIndex
     public FrozenDictionary<string, OperatorInfo> BinaryOperatorInfoBySyntax { get; }
     public FrozenDictionary<TokenType, OperatorInfo> BinaryOperatorInfoByTokenType { get; }
     public ImmutableArray<Associativity> AssociativityByPrecedence { get; }
-    public ImmutableArray<OperatorInfo> UnaryOperators { get; }
-    public ImmutableArray<OperatorInfo> BinaryOperators { get; }
+    public ImmutableArray<OperatorInfo> UnaryOperators => UnaryOperatorInfoBySyntax.Values;
+    public ImmutableArray<OperatorInfo> BinaryOperators => BinaryOperatorInfoBySyntax.Values;
 
     private OperatorIndex(
         IEnumerable<OperatorInfo> unaryOperators,
@@ -23,12 +23,10 @@ sealed class OperatorIndex
             static o => o.Syntax);
         UnaryOperatorInfoByTokenType = UnaryOperatorInfoBySyntax.Values.ToFrozenDictionary(
             static o => o.Token);
-        UnaryOperators = UnaryOperatorInfoBySyntax.Values.ToImmutableArray();
         BinaryOperatorInfoBySyntax = binaryOperators.ToFrozenDictionary(
             static o => o.Syntax);
         BinaryOperatorInfoByTokenType = BinaryOperatorInfoBySyntax.Values.ToFrozenDictionary(
             static o => o.Token);
-        BinaryOperators = BinaryOperatorInfoBySyntax.Values.ToImmutableArray();
         AssociativityByPrecedence = associativityByPredence.ToImmutableArray();
     }
 
