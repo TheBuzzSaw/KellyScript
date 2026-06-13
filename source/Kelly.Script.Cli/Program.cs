@@ -23,6 +23,8 @@ static class Program
                 return;
             }
 
+            var ti = TokenInfo.Create();
+
             var path = args[0];
             var x = args.Length;
             Console.WriteLine($"Tokenizing {path}");
@@ -33,14 +35,11 @@ static class Program
             var openSandwiches = new List<Token>();
             while (true)
             {
-                var token = reader.ReadToken(ref line, ref column, oi);
+                var token = reader.ReadToken(ref line, ref column, oi, ti);
                 if (token.Type == TokenType.Eof)
                     break;
-                if (token.Type != TokenType.Gap)
-                {
-                    var text = Encoding.UTF8.GetString(code.AsSpan(token.Start, token.Length));
-                    Console.WriteLine($"Line {token.Line} Col {token.Column} ({token.Type}): {text}");
-                }
+                var text = Encoding.UTF8.GetString(code.AsSpan(token.Start, token.Length));
+                Console.WriteLine($"Line {token.Line} Col {token.Column} ({token.Type}): {text}");
 
                 var openToken = default(Token);
                 switch (token.Type)

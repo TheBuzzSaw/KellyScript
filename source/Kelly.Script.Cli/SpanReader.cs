@@ -43,6 +43,16 @@ public static class SpanReader
         return result;
     }
 
+    public static T ChompOrDefault<T>(
+        ref this SpanReader<T> reader,
+        T defaultValue = default) where T : struct
+    {
+        if (reader.WasConsumed)
+            return defaultValue;
+        var result = reader.Span[reader.Position++];
+        return result;
+    }
+
     public static T Peek<T>(ref this SpanReader<T> reader) => reader.Span[reader.Position];
 
     public static T PeekOrDefault<T>(

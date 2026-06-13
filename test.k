@@ -118,17 +118,39 @@ struct CString
   }
 }
 
+public const int32 DaysPerYear = 365;
+public const int32 DaysPerFourCenturies = DaysPerYear * 400 + 97;
+public const int32 DaysPerCentury = DaysPerYear * 100 + 24;
+public const int32 DaysPerFourYears = DaysPerYear * 4 + 1;
+
+opaque struct LocalDateTime
+{
+  int64 ticks;
+}
+
+opaque struct Date
+{
+  int32 days; // Days since 1 Jan 0001.
+
+  property int32 Year
+  {
+    int32 result = 1;
+
+    return result;
+  }
+}
+
 opaque struct SpanWriter[type T]
 {
   property Span[T] Span;
   property size Position;
 
   property Span[T] Written => Span[0 to Position];
-  property Span[T] Available => Span[Position to Span.Count]
+  property Span[T] Available => Span[Position to end];
 
   public bool TrySetPosition(size position)
   {
-    if (this.Position in 0 to this.Span.Count)
+    if (position in 0 to this.Span.Count)
     {
       this.Position = position;
       return true;
@@ -153,6 +175,17 @@ opaque struct SpanWriter[type T]
   }
 }
 
+bundle SpanWriter
+{
+  public SpanWriter[T] Create[type T](Span[T] span)
+  {
+    return new
+    {
+      Span = span
+    };
+  }
+}
+
 bool TryBlit[type T](ref SpanWriter[uint8] this, ReadOnlySpan[T] source)
 {
   var bytes = source.AsBytes();
@@ -169,6 +202,7 @@ bool TryBlit[type T](ref SpanWriter[uint8] this, ReadOnlySpan[T] source)
 
 // int main(int32 argc, int8** argv)
 // int main(Span[CString] args)
+// int32 Main(ReadOnlySpan[ReadOnlyUtf8Span] args)
 
 int32 Main(ReadOnlySpan[ReadOnlySpan[uint8]] args)
 {

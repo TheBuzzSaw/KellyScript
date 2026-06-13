@@ -3,9 +3,10 @@ namespace Kelly.Script.Cli;
 public enum TokenType
 {
     None,
-    Gap,
     Eof,
     IllegalCodePoint,
+    CommentLine,
+    CommentBlock,
     Identifier,
     Integer,
     Real,
@@ -60,6 +61,7 @@ public enum TokenType
     OpenBrace,
     CloseBrace,
     Dot,
+    Comma,
     Splat,
     Slash,
     Percent,

@@ -129,6 +129,11 @@ sealed class OperatorIndex
             binaryOperators.Add(new("^=", TokenType.AssignXor, p));
             binaryOperators.Add(new("|=", TokenType.AssignOr, p));
         }
+
+        {
+            var p = NextPrecedence(Associativity.LeftToRight);
+            binaryOperators.Add(new(",", TokenType.Comma, p));
+        }
         
         var result = new OperatorIndex(
             unaryOperators, binaryOperators, associativityByPrecedence);

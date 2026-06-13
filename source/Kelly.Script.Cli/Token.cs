@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Text;
 
 namespace Kelly.Script.Cli;
 
@@ -29,70 +30,83 @@ static class TokenExtensions
         ref this SpanReader<byte> reader,
         ref int line,
         ref int column,
-        OperatorIndex operatorIndex)
+        OperatorIndex operatorIndex,
+        TokenInfo tokenInfo)
     {
-        if (!reader.HasMore)
+        var first = reader.PeekOrDefault();
+        while (Whitespace.Contains(first))
         {
-            return new Token
-            {
-                Type = TokenType.Eof,
-                Start = reader.Span.Length,
-                Length = 0,
-                Line = line,
-                Column = column
-            };
-        }
-
-        var result = new Token
-        {
-            Start = reader.Position,
-            Length = 1,
-            Line = line,
-            Column = column++
-        };
-        var first = reader.Chomp();
-        if (Whitespace.Contains(first))
-        {
-            result.Type = TokenType.Gap;
             if (first == '\n')
             {
                 ++line;
                 column = 1;
             }
-
-            while (Whitespace.Contains(reader.PeekOrDefault()))
+            else
             {
-                ++result.Length;
-
-                if (reader.Chomp() == '\n')
-                {
-                    ++line;
-                    column = 1;
-                }
-                else
-                {
-                    ++column;
-                }
+                ++column;
             }
+
+            ++reader.Position;
+            first = reader.PeekOrDefault();
         }
-        else if (first == '_' || Token.IsAlpha(first))
+
+        var result = new Token
         {
+            Start = reader.Position,
+            Line = line,
+            Column = column
+        };
+
+        if (reader.WasConsumed)
+        {
+            result.Type = TokenType.Eof;
+            return result;
+        }
+
+        if (first == '_' || Token.IsAlpha(first))
+        {
+            ++reader.Position;
+            ++result.Length;
+            ++column;
             result.Type = TokenType.Identifier;
-            while (reader.HasMore && Token.IsIdentifierFriendly(reader.Peek()))
+            while (Token.IsIdentifierFriendly(reader.PeekOrDefault()))
             {
                 ++reader.Position;
                 ++result.Length;
                 ++column;
             }
+
+            var identifier = Encoding.UTF8.GetString(reader.Span.Slice(result.Start, result.Length));
+            if (tokenInfo.TokenTypesByKeyword.TryGetValue(identifier, out var tokenType))
+                result.Type = tokenType;
         }
         else if (Token.IsDigit(first))
         {
+            ++reader.Position;
+            ++result.Length;
+            ++column;
             result.Type = TokenType.Integer;
-            while (reader.HasMore && Token.IsDigit(reader.Peek()))
+            while (Token.IsDigit(reader.PeekOrDefault()))
             {
                 ++reader.Position;
                 ++result.Length;
                 ++column;
+            }
+        }
+        else if (reader.Pending.StartsWith("//"u8))
+        {
+            result.Type = TokenType.CommentLine;
+            var end = reader.Pending.IndexOf((byte)'\n');
+            if (end == -1)
+            {
+                result.Length = reader.Pending.Length;
+                reader.Position = reader.Span.Length;
+            }
+            else
+            {
+                result.Length = end;
+                column += result.Length;
+                reader.Position += end;
             }
         }
         else
@@ -110,6 +124,8 @@ static class TokenExtensions
 
             if (tt != TokenType.None)
             {
+                ++reader.Position;
+                ++column;
                 result.Type = tt;
                 result.Length = 1;
             }
@@ -121,15 +137,22 @@ static class TokenExtensions
                 foreach (var bo in operatorIndex.BinaryOperators)
                 {
                     var syntax = bo.SyntaxUtf8;
-                    if (matchLength <= syntax.Length && pending.StartsWith(syntax))
+                    if (matchLength < syntax.Length && pending.StartsWith(syntax))
                     {
                         matchLength = syntax.Length;
                         result.Type = bo.Token;
                     }
                 }
 
+                if (matchLength == 0)
+                {
+                    var c = (char)reader.PeekOrDefault();
+                    matchLength = 1;
+                }
+
                 reader.Position += matchLength;
                 result.Length = matchLength;
+                column += matchLength;
             }
         }
 
