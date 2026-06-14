@@ -31,7 +31,6 @@ static class TokenExtensions
         ref this SpanReader<byte> reader,
         ref int line,
         ref int column,
-        OperatorIndex operatorIndex,
         TokenInfo tokenInfo)
     {
         var originalPosition = reader.Position;
@@ -74,7 +73,7 @@ static class TokenExtensions
         }
         else if (first == '"')
         {
-            result.Type = TokenType.StringLiteral;
+            result.Type = TokenType.LiteralString;
             ++reader.Position;
             var index = reader.Pending.IndexOf((byte)'"');
             var end = index == -1 ? reader.Pending.Length : index + 1;
@@ -83,12 +82,12 @@ static class TokenExtensions
         }
         else if (first == '\'')
         {
+            result.Type = TokenType.LiteralCodePoint;
             ++reader.Position;
             var index = reader.Pending.IndexOf((byte)'\'');
             var end = index == -1 ? reader.Pending.Length : index + 1;
             reader.Position += end;
             result.Length = reader.Position - result.Start;
-            result.Type = result.Length < 4 ? TokenType.AsciiCharLiteral : TokenType.CodePointLiteral;
         }
         else if (first == '_' || Token.IsAlpha(first))
         {
@@ -104,7 +103,7 @@ static class TokenExtensions
             }
 
             var identifier = Encoding.UTF8.GetString(reader.Span.Slice(result.Start, result.Length));
-            if (tokenInfo.TokenTypesByKeyword.TryGetValue(identifier, out var tokenType))
+            if (tokenInfo.TokenTypeBySyntax.TryGetValue(identifier, out var tokenType))
                 result.Type = tokenType;
         }
         else if (Token.IsDigit(first))
@@ -112,7 +111,7 @@ static class TokenExtensions
             ++reader.Position;
             ++result.Length;
             ++column;
-            result.Type = TokenType.Integer;
+            result.Type = TokenType.LiteralInteger;
             while (Token.IsDigit(reader.PeekOrDefault()))
             {
                 ++reader.Position;
@@ -161,13 +160,13 @@ static class TokenExtensions
                 var pending = reader.Pending;
                 var matchLength = 0;
                 result.Type = TokenType.IllegalCodePoint;
-                foreach (var bo in operatorIndex.BinaryOperators)
+                foreach (var pair in tokenInfo.Utf8SymbolsOnly)
                 {
-                    var syntax = bo.SyntaxUtf8;
+                    var syntax = pair.Key.AsSpan();
                     if (matchLength < syntax.Length && pending.StartsWith(syntax))
                     {
                         matchLength = syntax.Length;
-                        result.Type = bo.Token;
+                        result.Type = pair.Value;
                     }
                 }
 

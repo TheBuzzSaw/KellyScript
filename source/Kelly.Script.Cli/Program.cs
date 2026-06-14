@@ -35,7 +35,7 @@ static class Program
             var openSandwiches = new List<Token>();
             while (true)
             {
-                var token = reader.ReadToken(ref line, ref column, oi, ti);
+                var token = reader.ReadToken(ref line, ref column, ti);
                 if (token.Type == TokenType.Eof)
                     break;
                 var text = Encoding.UTF8.GetString(code.AsSpan(token.Start, token.Length));

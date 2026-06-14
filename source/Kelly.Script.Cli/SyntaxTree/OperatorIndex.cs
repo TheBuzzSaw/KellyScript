@@ -99,20 +99,20 @@ sealed class OperatorIndex
 
         {
             var p = NextPrecedence(Associativity.LeftToRight);
-            binaryOperators.Add(new("and", TokenType.LogicalAnd, p));
-            binaryOperators.Add(new("nand", TokenType.LogicalNand, p));
+            binaryOperators.Add(new("and", TokenType.KeywordAnd, p));
+            binaryOperators.Add(new("nand", TokenType.KeywordNand, p));
         }
 
         {
             var p = NextPrecedence(Associativity.LeftToRight);
-            binaryOperators.Add(new("xor", TokenType.LogicalXor, p));
-            binaryOperators.Add(new("xnor", TokenType.LogicalXnor, p));
+            binaryOperators.Add(new("xor", TokenType.KeywordXor, p));
+            binaryOperators.Add(new("xnor", TokenType.KeywordXnor, p));
         }
 
         {
             var p = NextPrecedence(Associativity.LeftToRight);
-            binaryOperators.Add(new("or", TokenType.LogicalOr, p));
-            binaryOperators.Add(new("nor", TokenType.LogicalNor, p));
+            binaryOperators.Add(new("or", TokenType.KeywordOr, p));
+            binaryOperators.Add(new("nor", TokenType.KeywordNor, p));
         }
 
         {

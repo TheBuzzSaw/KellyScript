@@ -1,11 +1,18 @@
 using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Kelly.Script.Cli;
 
 sealed class TokenInfo
 {
-    public required FrozenDictionary<string, TokenType> TokenTypesByKeyword { get; init; }
+    public ImmutableArray<KeyValuePair<string, TokenType>> SymbolsOnly { get; init; } = [];
+    public ImmutableArray<KeyValuePair<ImmutableArray<byte>, TokenType>> Utf8SymbolsOnly { get; init; } = [];
+    public required FrozenDictionary<string, TokenType> TokenTypeBySyntax { get; init; }
+    public required FrozenDictionary<TokenType, string> SyntaxByTokenType { get; init; }
     public static TokenInfo Create()
     {
         KeyValuePair<string, TokenType>[] pairs =
@@ -53,14 +60,71 @@ sealed class TokenInfo
             new("usize", TokenType.KeywordUSize),
             new("while", TokenType.KeywordWhile),
             new("xnor", TokenType.KeywordXnor),
-            new("xor", TokenType.LogicalXor)
+            new("xor", TokenType.KeywordXor),
+            new("(", TokenType.OpenParen),
+            new(")", TokenType.CloseParen),
+            new("[", TokenType.OpenBracket),
+            new("]", TokenType.CloseBracket),
+            new("{", TokenType.OpenBrace),
+            new("}", TokenType.CloseBrace),
+            new(".", TokenType.Dot),
+            new(",", TokenType.Comma),
+            new("*", TokenType.Splat),
+            new("/", TokenType.Slash),
+            new("%", TokenType.Percent),
+            new("+", TokenType.Plus),
+            new("-", TokenType.Minus),
+            new("<<", TokenType.ShiftLeft),
+            new(">>", TokenType.ShiftRight),
+            new("<", TokenType.LessThan),
+            new("<=", TokenType.LessThanOrEqual),
+            new(">", TokenType.GreaterThan),
+            new(">=", TokenType.GreaterThanOrEqual),
+            new("==", TokenType.Equal),
+            new("!=", TokenType.NotEqual),
+            new("&", TokenType.BitwiseAnd),
+            new("^", TokenType.BitwiseXor),
+            new("|", TokenType.BitwiseOr),
+            new("=", TokenType.Assign),
+            new("+=", TokenType.AssignSum),
+            new("-=", TokenType.AssignDiff),
+            new("*=", TokenType.AssignProduct),
+            new("/=", TokenType.AssignQuotient),
+            new("%=", TokenType.AssignMod),
+            new("<<=", TokenType.AssignLeftShift),
+            new(">>=", TokenType.AssignRightShift),
+            new("&=", TokenType.AssignAnd),
+            new("^=", TokenType.AssignXor),
+            new("|=", TokenType.AssignOr),
+            new(";", TokenType.Semicolon),
+            new("!", TokenType.Bang)
         ];
+
+        var symbolsOnly = pairs.Where(IsSymbols);
 
         var result = new TokenInfo
         {
-            TokenTypesByKeyword = pairs.ToFrozenDictionary()
+            SymbolsOnly = symbolsOnly.ToImmutableArray(),
+            Utf8SymbolsOnly = symbolsOnly.Select(ToUtf8).ToImmutableArray(),
+            TokenTypeBySyntax = pairs.ToFrozenDictionary(),
+            SyntaxByTokenType = pairs.Select(Swap).ToFrozenDictionary()
         };
 
         return result;
+
+        static bool IsSymbols(KeyValuePair<string, TokenType> pair) =>
+            !Token.IsAlpha(pair.Key[0]);
+
+        static KeyValuePair<ImmutableArray<byte>, TokenType> ToUtf8(
+            KeyValuePair<string, TokenType> pair)
+        {
+            var utf8 = Encoding.UTF8.GetBytes(pair.Key);
+            var array = ImmutableCollectionsMarshal.AsImmutableArray(utf8);
+            return new(array, pair.Value);
+        }
+
+        static KeyValuePair<TValue, TKey> Swap<TKey, TValue>(
+            KeyValuePair<TKey, TValue> pair) =>
+                new(pair.Value, pair.Key);
     }
 }
