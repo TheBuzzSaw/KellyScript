@@ -19,40 +19,7 @@ sealed class SyntaxTree : SyntaxNode
         TokenInfo tokenInfo)
     {
         var sourceCodeUtf8 = File.ReadAllBytes(sourceFile);
-        var tokens = new List<Token>();
-        var openSandwiches = new List<Token>();
-        var reader = SpanReader.Create(sourceCodeUtf8);
-        int line = 1;
-        int column = 1;
-
-        while (true)
-        {
-            var token = reader.ReadToken(
-                ref line,
-                ref column,
-                tokenInfo);
-            tokens.Add(token);
-            if (token.Type == TokenType.Eof)
-                break;
-            
-            switch (token.Type)
-            {
-                case TokenType.OpenParen:
-                case TokenType.OpenBrace:
-                case TokenType.OpenBracket:
-                    openSandwiches.Add(token);
-                    break;
-                case TokenType.CloseParen:
-                    CloseSandwich(token, TokenType.OpenParen);
-                    break;
-                case TokenType.CloseBrace:
-                    CloseSandwich(token, TokenType.OpenBrace);
-                    break;
-                case TokenType.CloseBracket:
-                    CloseSandwich(token, TokenType.OpenBracket);
-                    break;
-            }
-        }
+        var tokens = TokenExtensions.Lex(sourceCodeUtf8, tokenInfo);
 
         var result = new SyntaxTree
         {
@@ -60,40 +27,5 @@ sealed class SyntaxTree : SyntaxNode
         };
 
         return result;
-
-        void CloseSandwich(Token token, TokenType expectedTokenType)
-        {
-            if (openSandwiches.Exists(token => token.Type == expectedTokenType))
-            {
-                var openSandwich = openSandwiches.Pop();
-                if (openSandwich.Type != expectedTokenType)
-                {
-
-                }
-            }
-            else
-            {
-                var left = expectedTokenType switch
-                {
-                    TokenType.OpenParen => '(',
-                    TokenType.OpenBrace => '{',
-                    TokenType.OpenBracket => '[',
-                    _ => throw IllegalTokenType()
-                };
-
-                var right = token.Type switch
-                {
-                    TokenType.CloseParen => ')',
-                    TokenType.CloseBrace => '}',
-                    TokenType.CloseBracket => ']',
-                    _ => throw IllegalTokenType()
-                };
-
-                throw new LexerException(
-                    $"Line {token.Line} Column {token.Column}: Unexpected '{right}'. Missing '{left}'.");
-            }
-
-            static InvalidOperationException IllegalTokenType() => new("Illegal token type.");
-        }
     }
 }

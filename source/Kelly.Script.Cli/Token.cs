@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Text;
 
 namespace Kelly.Script.Cli;
@@ -26,6 +27,74 @@ static class TokenExtensions
 {
     private static readonly SearchValues<byte> Whitespace = SearchValues.Create(" \t\r\n"u8);
     private static readonly SearchValues<byte> OpSymbols = SearchValues.Create("`~!@#$%^&*()-=_+[]{}\\|;:'\",.<>/?"u8);
+
+    public static List<Token> Lex(ReadOnlySpan<byte> sourceCodeUtf8, TokenInfo tokenInfo)
+    {
+        var tokens = new List<Token>();
+        var openSandwiches = new List<Token>();
+        var reader = SpanReader.Create(sourceCodeUtf8);
+        int line = 1;
+        int column = 1;
+
+        while (true)
+        {
+            var token = reader.ReadToken(
+                ref line,
+                ref column,
+                tokenInfo);
+            tokens.Add(token);
+            if (token.Type == TokenType.Eof)
+                break;
+            
+            switch (token.Type)
+            {
+                case TokenType.OpenParen:
+                case TokenType.OpenBrace:
+                case TokenType.OpenBracket:
+                    openSandwiches.Add(token);
+                    break;
+                case TokenType.CloseParen:
+                    CloseSandwich(token, TokenType.OpenParen);
+                    break;
+                case TokenType.CloseBrace:
+                    CloseSandwich(token, TokenType.OpenBrace);
+                    break;
+                case TokenType.CloseBracket:
+                    CloseSandwich(token, TokenType.OpenBracket);
+                    break;
+            }
+        }
+        
+        return tokens;
+
+        void CloseSandwich(Token token, TokenType expectedOpenSandwichType)
+        {
+            if (openSandwiches.Exists(token => token.Type == expectedOpenSandwichType))
+            {
+                var openSandwich = openSandwiches.Pop();
+                if (openSandwich.Type != expectedOpenSandwichType)
+                {
+                    var missing = expectedOpenSandwichType switch
+                    {
+                        TokenType.OpenParen => ')',
+                        TokenType.OpenBrace => '}',
+                        TokenType.OpenBracket => ']',
+                        _ => throw new InvalidOperationException("Illegal token type.")
+                    };
+                    throw new LexerException(
+                        $"Line {token.Line} Column {token.Column}: Missing '{missing}' originally opened at {openSandwich.Line}:{openSandwich.Column}.");
+                }
+            }
+            else
+            {
+                var left = tokenInfo.SyntaxByTokenType[expectedOpenSandwichType];
+                var right = tokenInfo.SyntaxByTokenType[token.Type];
+
+                throw new LexerException(
+                    $"Line {token.Line} Column {token.Column}: Found unexpected '{right}'. Missing '{left}'.");
+            }
+        }
+    }
 
     public static Token ReadToken(
         ref this SpanReader<byte> reader,

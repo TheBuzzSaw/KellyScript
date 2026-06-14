@@ -9,7 +9,7 @@ namespace Kelly.Script.Cli;
 
 sealed class TokenInfo
 {
-    public ImmutableArray<KeyValuePair<string, TokenType>> SymbolsOnly { get; init; } = [];
+    public required FrozenDictionary<string, TokenType> SymbolsOnly { get; init; }
     public ImmutableArray<KeyValuePair<ImmutableArray<byte>, TokenType>> Utf8SymbolsOnly { get; init; } = [];
     public required FrozenDictionary<string, TokenType> TokenTypeBySyntax { get; init; }
     public required FrozenDictionary<TokenType, string> SyntaxByTokenType { get; init; }
@@ -104,7 +104,7 @@ sealed class TokenInfo
 
         var result = new TokenInfo
         {
-            SymbolsOnly = symbolsOnly.ToImmutableArray(),
+            SymbolsOnly = symbolsOnly.ToFrozenDictionary(),
             Utf8SymbolsOnly = symbolsOnly.Select(ToUtf8).ToImmutableArray(),
             TokenTypeBySyntax = pairs.ToFrozenDictionary(),
             SyntaxByTokenType = pairs.Select(Swap).ToFrozenDictionary()
