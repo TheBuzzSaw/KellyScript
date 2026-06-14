@@ -145,8 +145,8 @@ opaque struct SpanWriter[type T]
   property Span[T] Span;
   property size Position;
 
-  property Span[T] Written => Span[0 to Position];
-  property Span[T] Available => Span[Position to end];
+  property Span[T] Written => Span[0 to this.Position];
+  property Span[T] Available => Span[this.Position to end];
 
   public bool TrySetPosition(size position)
   {

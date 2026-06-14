@@ -25,6 +25,7 @@ struct Token
 static class TokenExtensions
 {
     private static readonly SearchValues<byte> Whitespace = SearchValues.Create(" \t\r\n"u8);
+    private static readonly SearchValues<byte> OpSymbols = SearchValues.Create("`~!@#$%^&*()-=_+[]{}\\|;:'\",.<>/?"u8);
 
     public static Token ReadToken(
         ref this SpanReader<byte> reader,
@@ -33,6 +34,7 @@ static class TokenExtensions
         OperatorIndex operatorIndex,
         TokenInfo tokenInfo)
     {
+        var originalPosition = reader.Position;
         var first = reader.PeekOrDefault();
         while (Whitespace.Contains(first))
         {
@@ -52,6 +54,7 @@ static class TokenExtensions
 
         var result = new Token
         {
+            Type = TokenType.IllegalCodePoint,
             Start = reader.Position,
             Line = line,
             Column = column
@@ -63,7 +66,31 @@ static class TokenExtensions
             return result;
         }
 
-        if (first == '_' || Token.IsAlpha(first))
+        if (first == ';')
+        {
+            result.Type = TokenType.Semicolon;
+            result.Length = 1;
+            ++reader.Position;
+        }
+        else if (first == '"')
+        {
+            result.Type = TokenType.StringLiteral;
+            ++reader.Position;
+            var index = reader.Pending.IndexOf((byte)'"');
+            var end = index == -1 ? reader.Pending.Length : index + 1;
+            reader.Position += end;
+            result.Length = reader.Position - result.Start;
+        }
+        else if (first == '\'')
+        {
+            ++reader.Position;
+            var index = reader.Pending.IndexOf((byte)'\'');
+            var end = index == -1 ? reader.Pending.Length : index + 1;
+            reader.Position += end;
+            result.Length = reader.Position - result.Start;
+            result.Type = result.Length < 4 ? TokenType.AsciiCharLiteral : TokenType.CodePointLiteral;
+        }
+        else if (first == '_' || Token.IsAlpha(first))
         {
             ++reader.Position;
             ++result.Length;
@@ -109,7 +136,7 @@ static class TokenExtensions
                 reader.Position += end;
             }
         }
-        else
+        else if (OpSymbols.Contains(first))
         {
             var tt = (int)first switch
             {
@@ -155,6 +182,10 @@ static class TokenExtensions
                 column += matchLength;
             }
         }
+
+        // Safety measure to avoid infinite loops. :(
+        if (reader.Position == originalPosition && !reader.WasConsumed)
+            ++reader.Position;
 
         return result;
     }
