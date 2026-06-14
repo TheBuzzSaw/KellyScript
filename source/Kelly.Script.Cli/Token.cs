@@ -103,6 +103,7 @@ static class TokenExtensions
         TokenInfo tokenInfo)
     {
         var originalPosition = reader.Position;
+    beginLex:
         var first = reader.PeekOrDefault();
         while (Whitespace.Contains(first))
         {
@@ -118,6 +119,72 @@ static class TokenExtensions
 
             ++reader.Position;
             first = reader.PeekOrDefault();
+        }
+
+        if (reader.StartsWith("//"u8))
+        {
+            var end = reader.Pending.IndexOf((byte)'\n');
+            if (end == -1)
+            {
+                end = reader.Pending.Length;
+                column += end;
+            }
+            else
+            {
+                ++end;
+                ++line;
+                column = 1;
+            }
+            reader.Position += end;
+            goto beginLex;
+        }
+
+        if (reader.StartsWith("/*"u8))
+        {
+            var remaining = reader.Pending[2..];
+            var openCount = 1;
+            while (0 < openCount)
+            {
+                var index = remaining.IndexOf((byte)'/');
+                if (index == -1)
+                {
+                    remaining = default;
+                    break;
+                }
+
+                if (0 < index && remaining[index - 1] == '*')
+                {
+                    --openCount;
+                    remaining = remaining.Slice(index + 1);
+                }
+                else if (index + 1 < remaining.Length && remaining[index + 1] == '*')
+                {
+                    ++openCount;
+                    remaining = remaining.Slice(index + 2);
+                }
+                else
+                {
+                    remaining = remaining.Slice(index + 1);
+                }
+            }
+
+            var end = reader.Pending.Length - remaining.Length;
+            var commentBlock = reader.Pending[..end];
+            reader.Position += end;
+            var newLineCount = commentBlock.Count((byte)'\n');
+            if (0 < newLineCount)
+            {
+                line += newLineCount;
+                column = 1;
+
+                var index = commentBlock.LastIndexOf((byte)'\n') + 1;
+                column += commentBlock.Length - index;
+            }
+            else
+            {
+                column += commentBlock.Length;
+            }
+            goto beginLex;
         }
 
         var result = new Token
@@ -186,22 +253,6 @@ static class TokenExtensions
                 ++reader.Position;
                 ++result.Length;
                 ++column;
-            }
-        }
-        else if (reader.Pending.StartsWith("//"u8))
-        {
-            result.Type = TokenType.CommentLine;
-            var end = reader.Pending.IndexOf((byte)'\n');
-            if (end == -1)
-            {
-                result.Length = reader.Pending.Length;
-                reader.Position = reader.Span.Length;
-            }
-            else
-            {
-                result.Length = end;
-                column += result.Length;
-                reader.Position += end;
             }
         }
         else if (OpSymbols.Contains(first))

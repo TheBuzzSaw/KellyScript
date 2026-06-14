@@ -65,6 +65,37 @@ public static class SpanReader
         return result;
     }
 
+    public static int IndexOfOrEnd<T>(ref this SpanReader<T> reader, T item)
+    {
+        var pending = reader.Pending;
+        var index = pending.IndexOf(item);
+        var result = index == -1 ? pending.Length : index;
+        return result;
+    }
+
+    public static int IndexOfOrEnd<T>(ref this SpanReader<T> reader, ReadOnlySpan<T> items)
+    {
+        var pending = reader.Pending;
+        var index = pending.IndexOf(items);
+        var result = index == -1 ? pending.Length : index;
+        return result;
+    }
+
+    public static ReadOnlySpan<T> ReadUntilAfterOrEnd<T>(ref this SpanReader<T> reader, ReadOnlySpan<T> items)
+    {
+        var pending = reader.Pending;
+        var index = pending.IndexOf(items);
+        var end = index == -1 ? pending.Length : index + items.Length;
+        var result = pending[..end];
+        reader.Position += end;
+        return result;
+    }
+
+    public static bool StartsWith<T>(ref this SpanReader<T> reader, ReadOnlySpan<T> span)
+    {
+        return reader.Pending.StartsWith(span);
+    }
+
     public static bool TryCreate<T>(IEnumerable<T>? enumerable, out SpanReader<T> reader)
     {
         if (TryGetSpan(enumerable, out var span))

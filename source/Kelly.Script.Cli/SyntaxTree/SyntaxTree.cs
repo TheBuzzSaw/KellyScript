@@ -20,6 +20,7 @@ sealed class SyntaxTree : SyntaxNode
     {
         var sourceCodeUtf8 = File.ReadAllBytes(sourceFile);
         var tokens = TokenExtensions.Lex(sourceCodeUtf8, tokenInfo);
+        var reader = SpanReader.Create(tokens);
 
         var result = new SyntaxTree
         {

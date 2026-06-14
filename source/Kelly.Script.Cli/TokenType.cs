@@ -5,8 +5,6 @@ public enum TokenType
     None,
     Eof,
     IllegalCodePoint,
-    CommentLine,
-    CommentBlock,
     Identifier,
     LiteralInteger,
     LiteralFloat,
