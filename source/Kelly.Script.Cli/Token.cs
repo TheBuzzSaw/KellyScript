@@ -210,11 +210,30 @@ static class TokenExtensions
         else if (first == '"')
         {
             result.Type = TokenType.LiteralString;
+            var startPosition = reader.Position;
             ++reader.Position;
-            var index = reader.Pending.IndexOf((byte)'"');
-            var end = index == -1 ? reader.Pending.Length : index + 1;
-            reader.Position += end;
-            result.Length = reader.Position - result.Start;
+            while (true)
+            {
+                var rune = reader.ReadRune();
+                if (rune.Value == '\n')
+                {
+                    // TODO: explode
+                    ++line;
+                    column = 1;
+                }
+                else
+                {
+                    ++column;
+                }
+
+                if (rune.Value == '"')
+                    break;
+                
+                if (rune.Value == '\\')
+                    _ = reader.ReadRune();
+            }
+
+            result.Length = reader.Position - startPosition;
         }
         else if (first == '\'')
         {
@@ -307,5 +326,17 @@ static class TokenExtensions
             ++reader.Position;
 
         return result;
+    }
+
+    public static Rune ReadRune(ref this SpanReader<byte> reader)
+    {
+        var result = Rune.DecodeFromUtf8(
+            reader.Pending,
+            out var rune,
+            out var bytesConsumed);
+        if (result != OperationStatus.Done)
+            throw new LexerException($"Error decoding UTF-8 code point ({result}).");
+        reader.Position += bytesConsumed;
+        return rune;
     }
 }
