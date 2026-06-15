@@ -13,6 +13,8 @@ struct Token
     public int Line;
     public int Column;
 
+    public readonly ReadOnlySpan<byte> GetSlice(ReadOnlySpan<byte> span) => span.Slice(Start, Length);
+
     private const int LowerFlag = 1 << 5;
 
     public static bool IsDigit(int c) => '0' <= c && c <= '9';

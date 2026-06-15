@@ -90,5 +90,6 @@ public enum TokenType
     AssignAnd,
     AssignXor,
     AssignOr,
-    Semicolon
+    Semicolon,
+    Colon
 }

@@ -97,6 +97,7 @@ sealed class TokenInfo
             new("^=", TokenType.AssignXor),
             new("|=", TokenType.AssignOr),
             new(";", TokenType.Semicolon),
+            new(":", TokenType.Colon),
             new("!", TokenType.Bang)
         ];
 
