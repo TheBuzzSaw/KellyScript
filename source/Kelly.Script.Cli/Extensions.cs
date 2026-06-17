@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Text;
 
 namespace Kelly.Script.Cli;
 
@@ -14,5 +15,12 @@ static class Extensions
         var result = list[index];
         list.RemoveAt(index);
         return result;
+    }
+
+    public static void Add(this List<char> list, Rune rune)
+    {
+        Span<char> buffer = stackalloc char[2];
+        var n = rune.EncodeToUtf16(buffer);
+        list.AddRange(buffer);
     }
 }

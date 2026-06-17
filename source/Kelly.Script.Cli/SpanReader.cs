@@ -65,6 +65,22 @@ public static class SpanReader
         return result;
     }
 
+    public static bool TryPeek<T>(
+        ref this SpanReader<T> reader,
+        [MaybeNullWhen(false)] out T result)
+    {
+        if (reader.Span.Length <= reader.Position)
+        {
+            result = default;
+            return false;
+        }
+        else
+        {
+            result = reader.Span[reader.Position];
+            return true;
+        }
+    }
+
     public static int IndexOfOrEnd<T>(ref this SpanReader<T> reader, T item)
     {
         var pending = reader.Pending;

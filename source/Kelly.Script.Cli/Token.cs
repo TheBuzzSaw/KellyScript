@@ -98,6 +98,31 @@ static class TokenExtensions
         }
     }
 
+    public static Rune ReadCodePointLiteral(this ref SpanReader<char> reader)
+    {
+        var rune = reader.DecodeRuneFromUtf16();
+        if (rune.Value == '\\')
+        {
+            // TODO: Add sequences for unicode values.
+            var escapeCharacter = reader.DecodeRuneFromUtf16();
+            Rune result = escapeCharacter.Value switch
+            {
+                '\'' => new('\''),
+                '"' => new('"'),
+                'n' => new('\n'),
+                '\\' => new('\\'),
+                'r' => new('\r'),
+                't' => new('\t'),
+                'v' => new('\v'),
+                '0' => new('\0'),
+                _ => throw new LexerException("Unrecognized escape sequence: \\" + escapeCharacter)
+            };
+
+            return result;
+        }
+        return rune;
+    }
+    
     public static Token ReadToken(
         ref this SpanReader<byte> reader,
         ref int line,
@@ -329,7 +354,7 @@ static class TokenExtensions
 
         return result;
     }
-
+    
     public static Rune ReadRune(ref this SpanReader<byte> reader)
     {
         var result = Rune.DecodeFromUtf8(
