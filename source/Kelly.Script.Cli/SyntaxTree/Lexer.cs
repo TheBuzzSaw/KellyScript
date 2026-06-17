@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Kelly.Script.Cli;
 
@@ -9,9 +11,12 @@ sealed class Lexer
     private static ReadOnlySpan<char> Whitespace => " \r\t";
     
     private readonly List<char> _buffer = [];
+    private readonly List<Token> _openSandwiches = [];
     private readonly TokenInfo _tokenInfo;
 
     public ReadOnlySpan<char> Buffer => CollectionsMarshal.AsSpan(_buffer);
+    public Rune CodePoint { get; private set; }
+    public BigInteger Integer { get; private set; }
 
     public Lexer(TokenInfo tokenInfo)
     {
@@ -23,9 +28,13 @@ sealed class Lexer
         ref int line,
         ref int column)
     {
+        var startingPosition = reader.Position;
         _buffer.Clear();
+        CodePoint = default;
+        Integer = BigInteger.Zero;
+        char first;
 
-        while (reader.TryPeek(out var first))
+        while (reader.TryPeek(out first))
         {
             if (Whitespace.Contains(first))
             {
@@ -131,22 +140,87 @@ sealed class Lexer
 
         if (reader.TryMatch('\''))
         {
+            column += 2;
             if (reader.TryMatch('\''))
             {
                 _buffer.Add('\0');
             }
             else
             {
-                var body = reader.ReadCodePointLiteral();
-                _buffer.Add(body);
+                CodePoint = reader.ReadCodePointLiteral();
 
                 if (!reader.TryMatch('\''))
                     throw new LexerException($"Line {line} Column {column}: Expected ' after code point.");
+                ++column;
             }
+            token.Type = TokenType.LiteralCodePoint;
+            token.Length = reader.Position - token.Start;
+            return token;
         }
 
-        if (token.Length < 1)
-            token.Length = 1;
+        if (reader.TryMatch('"'))
+        {
+            ++column;
+            while (!reader.TryMatch('"'))
+            {
+                if (reader.WasConsumed)
+                    throw new LexerException($"Line {line} Column {column}: Expected \" to end string literal.");
+                var codePoint = reader.ReadCodePointLiteral();
+                _buffer.Add(codePoint);
+                ++column;
+            }
+            ++column;
+            token.Type = TokenType.LiteralString;
+            token.Length = reader.Position - token.Start;
+            return token;
+        }
+
+        if (Token.IsDigit(first))
+        {
+            // TODO: Parse floats.
+            token.Type = TokenType.LiteralInteger;
+            while (true)
+            {
+                var next = reader.PeekOrDefault();
+                if (Token.IsDigit(next))
+                {
+                    _buffer.Add(reader.Chomp());
+                    ++column;
+                    ++token.Length;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            Integer = BigInteger.Parse(Buffer);
+            return token;
+        }
+
+        if (Token.IsAlpha(first) || first == '_')
+        {
+            token.Type = TokenType.Identifier;
+            ++token.Length;
+            ++reader.Position;
+            ++column;
+            _buffer.Add(first);
+
+            while (Token.IsIdentifierFriendly(reader.PeekOrDefault()))
+            {
+                _buffer.Add(reader.Chomp());
+                ++token.Length;
+                ++column;
+            }
+
+            var lookup = _tokenInfo.TokenTypeBySyntax.GetAlternateLookup<ReadOnlySpan<char>>();
+            if (lookup.TryGetValue(Buffer, out var keywordToken))
+                token.Type = keywordToken;
+            return token;
+        }
+
+        // Safeguard to avoid infinite loop.
+        if (!reader.WasConsumed && reader.Position <= startingPosition)
+            reader.Position = startingPosition + 1;
         return token;
     }
 }

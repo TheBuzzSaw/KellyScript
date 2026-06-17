@@ -101,6 +101,8 @@ static class TokenExtensions
     public static Rune ReadCodePointLiteral(this ref SpanReader<char> reader)
     {
         var rune = reader.DecodeRuneFromUtf16();
+        if (rune.Value == '\n')
+            throw new LexerException("Newline in string literal not allowed.");
         if (rune.Value == '\\')
         {
             // TODO: Add sequences for unicode values.
