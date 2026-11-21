@@ -23,7 +23,7 @@ static class IndentLevelExtensions
         this StringBuilder builder,
         IndentLevel indentLevel)
     {
-        return builder.AppendRepeat(' ', indentLevel.FullWidth);
+        return builder.Append(' ', indentLevel.FullWidth);
     }
 
     public static StringBuilder AppendTreeBranch(
@@ -33,16 +33,6 @@ static class IndentLevelExtensions
         builder.AppendIndent(indentLevel);
         if (0 < indentLevel.Level)
             builder.Append('└');
-        return builder;
-    }
-
-    public static StringBuilder AppendRepeat(
-        this StringBuilder builder,
-        char c,
-        int count)
-    {
-        for (int i = 0; i < count; ++i)
-            builder.Append(c);
         return builder;
     }
 }
